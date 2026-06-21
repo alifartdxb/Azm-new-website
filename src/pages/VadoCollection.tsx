@@ -1,10 +1,15 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Droplet, Star, ShieldCheck } from "lucide-react";
 import { motion } from "motion/react";
+import { SEO } from "../components/SEO";
 
 export function VadoCollection() {
   return (
     <div className="flex-grow flex flex-col bg-white">
+      <SEO 
+        title="VADO UK Collection | Premium British Brassware UAE | AZM Group"
+        description="Discover the VADO UK collection at AZM Group. Precision engineering, rigorous quality testing, and striking contemporary design for prestigious properties across the UAE."
+      />
       {/* Vado Hero */}
       <div className="relative h-[70vh] bg-stone-900 flex items-center overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=2069&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-luminosity"></div>

@@ -6,6 +6,7 @@ import {
   ZoomIn, Check, Settings, FileDown, ArrowRight, X 
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { SEO } from "../components/SEO";
 
 export function ProductDetail() {
   const { sku } = useParams<{ sku: string }>();
@@ -27,8 +28,60 @@ export function ProductDetail() {
 
   if (!product) return <div className="p-24 text-center">Product not found</div>;
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://www.azmgroup.ae"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Catalog",
+        "item": "https://www.azmgroup.ae/products"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": product.category,
+        "item": `https://www.azmgroup.ae/products/${product.category.toLowerCase().replace(/\s+/g, '-')}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": product.name,
+        "item": `https://www.azmgroup.ae/products/${product.sku}`
+      }
+    ]
+  };
+
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "image": product.images[0],
+    "description": product.description,
+    "sku": product.sku,
+    "brand": {
+      "@type": "Brand",
+      "name": product.brand
+    },
+    "category": product.category
+  };
+
   return (
     <div className="flex-grow flex flex-col bg-white font-sans text-brand-dark">
+      <SEO 
+        title={`${product.name} | ${product.category} | AZM Group`}
+        description={product.description}
+        image={product.images[0]}
+        type="product"
+        schemas={[breadcrumbSchema, productSchema]}
+      />
       {/* Breadcrumb Navigation */}
       <div className="bg-stone-50 border-b border-stone-100 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center text-xs font-semibold uppercase tracking-widest text-stone-500 overflow-x-auto whitespace-nowrap">
@@ -140,7 +193,7 @@ export function ProductDetail() {
                 </a>
               </div>
               <Link 
-                to="/showrooms"
+                to="/contact"
                 className="w-full bg-white border border-stone-200 hover:border-brand-primary text-brand-secondary py-4 rounded-xl font-semibold uppercase tracking-wider text-sm flex items-center justify-center gap-2 transition-colors"
               >
                 <MapPin size={18} /> Book Showroom Visit

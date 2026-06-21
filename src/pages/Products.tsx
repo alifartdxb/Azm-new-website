@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { PRODUCTS_CATEGORIES, BRANDS, MOCK_PRODUCTS_DATABASE } from "../data";
 import { ArrowRight, SlidersHorizontal, ChevronRight, X, ArrowUpRight, Check, Search } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { SEO } from "../components/SEO";
 
 export function Products() {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
@@ -111,8 +112,32 @@ export function Products() {
     </div>
   );
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://www.azmgroup.ae"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Catalog",
+        "item": "https://www.azmgroup.ae/products"
+      }
+    ]
+  };
+
   return (
     <div className="flex-grow flex flex-col bg-stone-50 font-sans text-brand-dark min-h-screen">
+      <SEO 
+        title="Luxury Bathroom & Kitchen Products Catalog | AZM Group"
+        description="Browse our extensive collection of premium bathroom and kitchen sanitaryware, faucets, ceramics, and architectural finishes from top brands like VADO UK."
+        schemas={[breadcrumbSchema]}
+      />
       {/* Breadcrumb Navigation */}
       <div className="bg-white border-b border-stone-100 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center text-xs font-semibold uppercase tracking-widest text-stone-500 overflow-x-auto whitespace-nowrap">

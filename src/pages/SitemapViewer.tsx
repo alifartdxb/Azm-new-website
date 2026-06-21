@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { PRODUCTS_CATEGORIES } from "../data";
 import { Network, Search, ExternalLink } from "lucide-react";
+import { SEO } from "../components/SEO";
 
 export function SitemapViewer() {
   const tree = [
@@ -26,6 +27,7 @@ export function SitemapViewer() {
 
   return (
     <div className="flex-grow bg-stone-950 text-stone-300 py-20 font-mono">
+      <SEO title="Sitemap | AZM Group" description="Sitemap of AZM Group's Web Architecture." />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="flex items-center gap-4 mb-16 pb-8 border-b border-stone-800">

@@ -35,7 +35,7 @@ export function Layout() {
     { name: "Projects", path: "/projects" },
     { name: "Catalogues", path: "/catalogues" },
     { name: "News & Blogs", path: "/news" },
-    { name: "Showrooms", path: "/showrooms" },
+    { name: "Showrooms", path: "/contact" },
   ];
 
   return (
@@ -230,7 +230,7 @@ export function Layout() {
                <li><Link to="/vado-collection" className="hover:text-white transition-colors">VADO UK Collection</Link></li>
                <li><Link to="/projects" className="hover:text-white transition-colors">Our Projects</Link></li>
                <li><Link to="/catalogues" className="hover:text-white transition-colors">Download Catalogues</Link></li>
-               <li><Link to="/showrooms" className="hover:text-white transition-colors">Showroom Locator</Link></li>
+               <li><Link to="/contact" className="hover:text-white transition-colors">Showroom Locator</Link></li>
              </ul>
           </div>
 
@@ -263,6 +263,7 @@ export function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pt-8 border-t border-stone-800 text-xs flex flex-col md:flex-row justify-between items-center text-stone-500">
           <p>&copy; {new Date().getFullYear()} AZM Group UAE. All rights reserved.</p>
           <div className="flex gap-4 mt-4 md:mt-0">
+            <Link to="/admin" className="hover:text-brand-primary transition-colors font-semibold text-stone-400">Admin Portal</Link>
             <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             <Link to="/sitemap" className="hover:text-white transition-colors">Sitemap</Link>

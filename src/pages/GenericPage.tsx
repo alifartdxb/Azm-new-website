@@ -1,6 +1,7 @@
 import { useParams, useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { SEO } from "../components/SEO";
 
 export function GenericPage({ title, subtitle }: { title?: string, subtitle?: string }) {
   const location = useLocation();
@@ -9,6 +10,7 @@ export function GenericPage({ title, subtitle }: { title?: string, subtitle?: st
   
   return (
     <div className="flex-grow flex flex-col pt-10">
+      <SEO title={`${pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1)} | AZM Group`} />
       {/* Page Header */}
       <div className="bg-stone-50 py-16 border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
