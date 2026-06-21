@@ -13,6 +13,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { PRODUCTS_CATEGORIES } from "../data";
 import { PredictiveSearch } from "./PredictiveSearch";
+import { AnalyticsManager } from "./AnalyticsManager";
 
 export function Layout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -40,6 +41,7 @@ export function Layout() {
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col font-sans text-brand-dark">
+      <AnalyticsManager />
       {/* Top Bar for B2B Fast Actions */}
       <div className="bg-brand-secondary text-white py-2 text-xs md:text-sm font-medium tracking-wide">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
