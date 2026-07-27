@@ -17,31 +17,42 @@ import { AnalyticsManager } from "./AnalyticsManager";
 
 export function Layout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isProductsDropdownOpen, setIsProductsDropdownOpen] = useState(false);
+  const [activeMegaMenu, setActiveMegaMenu] = useState<string | null>(null);
   const location = useLocation();
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    setActiveMegaMenu(null);
   }, [location.pathname]);
 
   const navigation = [
     { name: "About Us", path: "/about" },
-    { name: "Brands", path: "/brands" },
-    {
-      name: "Products",
+    { 
+      name: "Products", 
       path: "/products",
-      hasDropdown: true,
+      megaMenu: "products"
     },
-    { name: "VADO Collection", path: "/vado-collection" },
-    { name: "Projects", path: "/projects" },
+    { 
+      name: "Brands", 
+      path: "/brands",
+      megaMenu: "brands"
+    },
+    { 
+      name: "Projects", 
+      path: "/projects",
+      megaMenu: "projects"
+    },
     { name: "Catalogues", path: "/catalogues" },
-    { name: "News & Blogs", path: "/news" },
+    { name: "News", path: "/blog" },
     { name: "Showrooms", path: "/contact" },
   ];
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col font-sans text-brand-dark">
       <AnalyticsManager />
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:p-4 focus:bg-white focus:text-brand-dark">
+        Skip to main content
+      </a>
       {/* Top Bar for B2B Fast Actions */}
       <div className="bg-brand-secondary text-white py-2 text-xs md:text-sm font-medium tracking-wide">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
@@ -60,7 +71,7 @@ export function Layout() {
       </div>
 
       {/* Main Navigation */}
-      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-stone-200">
+      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-stone-200 group" onMouseLeave={() => setActiveMegaMenu(null)}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
@@ -81,44 +92,18 @@ export function Layout() {
               {navigation.map((item) => (
                 <div
                   key={item.name}
-                  className="relative group"
-                  onMouseEnter={() => item.hasDropdown && setIsProductsDropdownOpen(true)}
-                  onMouseLeave={() => item.hasDropdown && setIsProductsDropdownOpen(false)}
+                  className="relative"
+                  onMouseEnter={() => setActiveMegaMenu(item.megaMenu || null)}
                 >
                   <Link
                     to={item.path}
                     className={`flex items-center gap-1 py-8 text-sm font-semibold tracking-wide uppercase transition-colors ${
-                      location.pathname.startsWith(item.path) ? "text-stone-900" : "text-stone-500 hover:text-stone-900"
+                      location.pathname.startsWith(item.path) && item.path !== '/' ? "text-stone-900" : "text-stone-500 hover:text-stone-900"
                     }`}
                   >
                     {item.name}
-                    {item.hasDropdown && <ChevronDown size={14} className="group-hover:rotate-180 transition-transform duration-300" />}
+                    {item.megaMenu && <ChevronDown size={14} className={`transition-transform duration-300 ${activeMegaMenu === item.megaMenu ? 'rotate-180 text-brand-primary' : ''}`} />}
                   </Link>
-                  
-              {/* Mega Menu Dropdown for Products */}
-                  {item.hasDropdown && (
-                    <AnimatePresence>
-                      {isProductsDropdownOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute top-full left-1/2 -translate-x-1/2 w-[800px] bg-white border border-stone-200 shadow-2xl p-8 grid grid-cols-3 gap-6"
-                        >
-                          {PRODUCTS_CATEGORIES.map((category) => (
-                            <Link
-                              key={category}
-                              to={`/products/${category.toLowerCase().replace(/\s+/g, "-")}`}
-                              className="text-sm text-stone-600 hover:text-stone-900 hover:underline underline-offset-4 font-medium transition-all"
-                            >
-                              {category}
-                            </Link>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  )}
                 </div>
               ))}
               
@@ -139,12 +124,119 @@ export function Layout() {
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="text-stone-900 p-2"
+                aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={isMobileMenuOpen}
               >
                 {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
           </div>
         </div>
+
+        {/* Mega Menus Container */}
+        <AnimatePresence>
+          {activeMegaMenu && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute top-full left-0 w-full bg-white border-b border-stone-200 shadow-2xl overflow-hidden"
+              onMouseEnter={() => setActiveMegaMenu(activeMegaMenu)}
+              onMouseLeave={() => setActiveMegaMenu(null)}
+            >
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                {activeMegaMenu === 'products' && (
+                  <div className="grid grid-cols-4 gap-8">
+                    <div className="col-span-1">
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-6">By Category</h3>
+                      <ul className="space-y-4">
+                        {PRODUCTS_CATEGORIES.map(cat => (
+                          <li key={cat}>
+                            <Link to={`/products/${cat.toLowerCase().replace(/\s+/g, "-")}`} className="text-stone-600 hover:text-brand-primary transition-colors font-medium">
+                              {cat}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="col-span-1">
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-6">Collections</h3>
+                      <ul className="space-y-4">
+                        <li><Link to="/products" className="text-stone-600 hover:text-brand-primary transition-colors font-medium">Modern Minimalist</Link></li>
+                        <li><Link to="/products" className="text-stone-600 hover:text-brand-primary transition-colors font-medium">Classic Elegance</Link></li>
+                        <li><Link to="/products" className="text-stone-600 hover:text-brand-primary transition-colors font-medium">Industrial Chic</Link></li>
+                        <li><Link to="/products" className="text-stone-600 hover:text-brand-primary transition-colors font-medium">Sustainable Luxury</Link></li>
+                      </ul>
+                    </div>
+                    <div className="col-span-2 relative group overflow-hidden bg-stone-100 p-8 flex flex-col justify-end min-h-[300px] rounded-xl">
+                      <img src="https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=800&auto=format&fit=crop" alt="Featured Collection" className="absolute inset-0 w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-700" />
+                      <div className="relative z-10">
+                        <span className="bg-white text-brand-secondary px-3 py-1 text-xs font-bold uppercase tracking-wider mb-3 inline-block">New Arrival</span>
+                        <h4 className="text-2xl font-bold font-display text-brand-secondary mb-2">The VADO Knurled Collection</h4>
+                        <Link to="/vado-collection" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-brand-secondary hover:text-brand-primary transition-colors">
+                          Explore Now &rarr;
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeMegaMenu === 'brands' && (
+                  <div className="grid grid-cols-4 gap-8">
+                     <div className="col-span-2">
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-6">Our Premium Partners</h3>
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                        <Link to="/brands/vado" className="text-stone-600 hover:text-brand-primary transition-colors font-medium text-lg">VADO UK</Link>
+                        <Link to="/brands/jaquar" className="text-stone-600 hover:text-brand-primary transition-colors font-medium text-lg">JAQUAR</Link>
+                        <Link to="/brands/italian-standards" className="text-stone-600 hover:text-brand-primary transition-colors font-medium text-lg">ITALIAN STANDARDS</Link>
+                        <Link to="/brands/nourk" className="text-stone-600 hover:text-brand-primary transition-colors font-medium text-lg">NOURK</Link>
+                        <Link to="/brands/sanit" className="text-stone-600 hover:text-brand-primary transition-colors font-medium text-lg">SANIT</Link>
+                        <Link to="/brands/sonet" className="text-stone-600 hover:text-brand-primary transition-colors font-medium text-lg">SONET</Link>
+                      </div>
+                    </div>
+                    <div className="col-span-2 relative group overflow-hidden bg-brand-secondary p-8 flex flex-col justify-end min-h-[300px] rounded-xl">
+                      <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800&auto=format&fit=crop" alt="VADO UK" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700" />
+                      <div className="relative z-10">
+                        <h4 className="text-3xl font-bold font-display text-white mb-2">VADO UK</h4>
+                        <p className="text-white/80 mb-4 max-w-sm">Exquisite British brassware engineering combining luxury design with water-saving technology.</p>
+                        <Link to="/brands" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-white hover:text-brand-primary transition-colors">
+                          Discover VADO &rarr;
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeMegaMenu === 'projects' && (
+                  <div className="grid grid-cols-3 gap-8">
+                     <Link to="/projects/atlantis-the-royal" className="group block relative overflow-hidden aspect-[4/3] bg-stone-100 rounded-xl">
+                        <img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=800&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Atlantis The Royal" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
+                          <span className="text-brand-primary text-[10px] font-bold uppercase tracking-wider mb-1">Hospitality</span>
+                          <h4 className="text-white font-bold text-lg">Atlantis The Royal</h4>
+                        </div>
+                     </Link>
+                     <Link to="/projects/emaar-beachfront" className="group block relative overflow-hidden aspect-[4/3] bg-stone-100 rounded-xl">
+                        <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Emaar Beachfront Residences" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
+                          <span className="text-brand-primary text-[10px] font-bold uppercase tracking-wider mb-1">Residential</span>
+                          <h4 className="text-white font-bold text-lg">Emaar Beachfront</h4>
+                        </div>
+                     </Link>
+                     <div className="flex flex-col justify-center p-8 bg-stone-50 border border-stone-200 rounded-xl">
+                        <h4 className="text-2xl font-bold font-display text-brand-secondary mb-4">Our Portfolio</h4>
+                        <p className="text-stone-600 mb-6">Discover our involvement in the most prestigious architectural developments across the UAE.</p>
+                        <Link to="/projects" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-brand-primary hover:text-brand-secondary transition-colors">
+                          View All Projects &rarr;
+                        </Link>
+                     </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Mobile Navigation */}
         <AnimatePresence>
@@ -176,7 +268,7 @@ export function Layout() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow flex flex-col">
+      <main id="main-content" className="flex-grow flex flex-col">
         <Outlet />
       </main>
 
@@ -219,9 +311,9 @@ export function Layout() {
               Premium Sanitary Ware, Bathroom Solutions, Kitchen Solutions, and Building Materials for distinguished B2B and retail projects across the UAE.
             </p>
             <div className="flex flex-col gap-3 text-sm">
-              <span className="flex items-center gap-2"><MapPin size={16} className="text-stone-500" /> Dubai, United Arab Emirates</span>
-              <span className="flex items-center gap-2"><Phone size={16} className="text-stone-500" /> +971 50 123 4567</span>
-              <span className="flex items-center gap-2"><Mail size={16} className="text-stone-500" /> sales@azmgroup.ae</span>
+              <span className="flex items-center gap-2"><MapPin size={16} className="text-brand-primary" /> Dubai, United Arab Emirates</span>
+              <span className="flex items-center gap-2"><Phone size={16} className="text-brand-primary" /> +971 50 123 4567</span>
+              <span className="flex items-center gap-2"><Mail size={16} className="text-brand-primary" /> sales@azmgroup.ae</span>
             </div>
           </div>
 
@@ -262,10 +354,10 @@ export function Layout() {
              </form>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pt-8 border-t border-stone-800 text-xs flex flex-col md:flex-row justify-between items-center text-stone-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pt-8 border-t border-white/10 text-xs flex flex-col md:flex-row justify-between items-center text-white/60">
           <p>&copy; {new Date().getFullYear()} AZM Group UAE. All rights reserved.</p>
           <div className="flex gap-4 mt-4 md:mt-0">
-            <Link to="/admin" className="hover:text-brand-primary transition-colors font-semibold text-stone-400">Admin Portal</Link>
+            <Link to="/admin" className="hover:text-brand-primary transition-colors font-semibold text-white/80">Admin Portal</Link>
             <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             <Link to="/sitemap" className="hover:text-white transition-colors">Sitemap</Link>

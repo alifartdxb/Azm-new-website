@@ -14,9 +14,15 @@ const SitemapViewer = lazy(() => import("./pages/SitemapViewer").then(module => 
 const VadoCollection = lazy(() => import("./pages/VadoCollection").then(module => ({ default: module.VadoCollection })));
 const ProductDetail = lazy(() => import("./pages/ProductDetail").then(module => ({ default: module.ProductDetail })));
 const Contact = lazy(() => import("./pages/Contact").then(module => ({ default: module.Contact })));
+const About = lazy(() => import("./pages/About").then(module => ({ default: module.About })));
+const Blog = lazy(() => import("./pages/Blog").then(module => ({ default: module.Blog })));
+const BlogDetail = lazy(() => import("./pages/BlogDetail").then(module => ({ default: module.BlogDetail })));
+const Projects = lazy(() => import("./pages/Projects").then(module => ({ default: module.Projects })));
+const ProjectDetail = lazy(() => import("./pages/ProjectDetail").then(module => ({ default: module.ProjectDetail })));
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout").then(module => ({ default: module.AdminLayout })));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard").then(module => ({ default: module.AdminDashboard })));
 const AdminProducts = lazy(() => import("./pages/admin/AdminProducts").then(module => ({ default: module.AdminProducts })));
+const AdminBlogs = lazy(() => import("./pages/admin/AdminBlogs").then(module => ({ default: module.AdminBlogs })));
 const AdminGeneric = lazy(() => import("./pages/admin/AdminGeneric").then(module => ({ default: module.AdminGeneric })));
 
 // Loading Fallback Component
@@ -37,7 +43,7 @@ export default function App() {
             <Route path="brands" element={<AdminGeneric />} />
             <Route path="categories" element={<AdminGeneric />} />
             <Route path="projects" element={<AdminGeneric />} />
-            <Route path="blogs" element={<AdminGeneric />} />
+            <Route path="blogs" element={<AdminBlogs />} />
             <Route path="media" element={<AdminGeneric />} />
             <Route path="seo" element={<AdminGeneric />} />
             <Route path="catalogs" element={<AdminGeneric />} />
@@ -52,6 +58,11 @@ export default function App() {
             <Route path="vado-collection" element={<VadoCollection />} />
             <Route path="sitemap" element={<SitemapViewer />} />
             <Route path="contact" element={<Contact />} />
+            <Route path="about" element={<About />} />
+            <Route path="blog" element={<Blog />} />
+            <Route path="blog/:slug" element={<BlogDetail />} />
+            <Route path="projects" element={<Projects />} />
+            <Route path="projects/:slug" element={<ProjectDetail />} />
             
             {/* Catch-all generic route for mockups */}
             <Route path="*" element={<GenericPage />} />

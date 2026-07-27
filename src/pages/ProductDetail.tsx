@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { SEO } from "../components/SEO";
+import { OptimizedImage } from "../components/OptimizedImage";
 
 export function ProductDetail() {
   const { sku } = useParams<{ sku: string }>();
@@ -104,10 +105,10 @@ export function ProductDetail() {
               className="relative aspect-square bg-stone-50 rounded-2xl overflow-hidden cursor-zoom-in border border-stone-100 group"
               onClick={() => setIsZoomModalOpen(true)}
             >
-              <img 
+              <OptimizedImage 
                 src={activeImage} 
                 alt={product.name} 
-                className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-700"
+                className="mix-blend-multiply group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 flex items-center justify-center">
                 <div className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm shadow-xl flex items-center justify-center text-brand-secondary opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
@@ -129,7 +130,7 @@ export function ProductDetail() {
                   onClick={() => setActiveImage(img)}
                   className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${activeImage === img ? 'border-brand-primary shadow-lg' : 'border-transparent hover:border-stone-300'}`}
                 >
-                  <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover mix-blend-multiply" />
+                  <OptimizedImage src={img} alt={`Thumbnail ${idx + 1}`} className="mix-blend-multiply" />
                 </button>
               ))}
             </div>
@@ -270,7 +271,7 @@ export function ProductDetail() {
              {MOCK_PRODUCTS_DATABASE.slice(0, 4).map((related) => (
                 <div key={related.sku} className="group bg-white rounded-2xl border border-stone-100 overflow-hidden hover:shadow-xl transition-all duration-300">
                   <div className="aspect-square bg-stone-50 relative overflow-hidden p-6 flex items-center justify-center">
-                    <img src={related.images[0]} alt={related.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
+                    <OptimizedImage src={related.images[0]} alt={related.name} className="mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <div className="p-6">
                     <p className="text-brand-primary text-[10px] uppercase font-bold tracking-wider mb-2">{related.brand}</p>

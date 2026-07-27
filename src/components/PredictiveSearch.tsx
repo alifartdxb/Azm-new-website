@@ -4,6 +4,7 @@ import { searchProducts } from '../data';
 import { ProductCatalog } from '../types';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { OptimizedImage } from './OptimizedImage';
 
 export function PredictiveSearch({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
   const [query, setQuery] = useState('');
@@ -52,7 +53,8 @@ export function PredictiveSearch({ variant = 'light' }: { variant?: 'light' | 'd
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by SKU, Name, Series, or Category..."
-          className={`w-full pl-12 pr-12 py-3 rounded-full focus:outline-none transition-all shadow-sm ${bgClasses}`}
+          aria-label="Search products"
+          className={`w-full pl-12 pr-12 py-3 rounded-full focus:outline-none transition-all shadow-sm ${bgClasses} focus:ring-2 focus:ring-brand-primary/20`}
         />
         {isSearching && (
           <Loader2 className={`absolute right-4 top-1/2 -translate-y-1/2 animate-spin ${variant === 'dark' ? 'text-white' : 'text-brand-primary'}`} size={18} />
@@ -84,7 +86,7 @@ export function PredictiveSearch({ variant = 'light' }: { variant?: 'light' | 'd
                     className="flex items-center gap-4 p-4 hover:bg-stone-50 transition-colors border-b border-stone-50 last:border-0 group"
                   >
                     <div className="w-12 h-12 rounded bg-stone-200 overflow-hidden flex-shrink-0">
-                      <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+                      <OptimizedImage src={product.images[0]} alt={product.name} />
                     </div>
                     <div className="flex-grow">
                       <div className="flex justify-between items-start">

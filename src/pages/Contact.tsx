@@ -1,20 +1,56 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, MessageCircle, Clock, ArrowRight, Building, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { SEO } from "../components/SEO";
+import { supabase } from "../lib/supabase";
 
 export function Contact() {
   const [activeTab, setActiveTab] = useState<"general" | "quote" | "project" | "showroom">("general");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    setTimeout(() => {
-      setIsSubmitted(false);
-      // reset logic here in real app
-    }, 5000);
+    setIsSubmitting(true);
+    
+    try {
+      const formData = new FormData(e.currentTarget);
+      const firstName = formData.get('firstName') as string;
+      const lastName = formData.get('lastName') as string;
+      const email = formData.get('email') as string;
+      const phone = formData.get('phone') as string;
+      const companyName = formData.get('companyName') as string;
+      const role = formData.get('role') as string;
+      const message = formData.get('message') as string;
+      
+      const payload = {
+        full_name: `${firstName} ${lastName}`.trim(),
+        email,
+        phone,
+        company_name: companyName,
+        inquiry_type: activeTab,
+        message: `Role: ${role}\nMessage: ${message}`,
+      };
+
+      if (supabase) {
+        const { error } = await supabase.from('leads').insert([payload]);
+        if (error) console.error("Supabase insert error:", error);
+      } else {
+        // Fallback mock submission
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        console.log("Mock lead payload:", payload);
+      }
+      
+      setIsSubmitted(true);
+      setTimeout(() => {
+        setIsSubmitted(false);
+      }, 5000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const formTabs = [
@@ -198,23 +234,23 @@ export function Contact() {
                           {/* Common Fields */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                               <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">First Name *</label>
-                               <input required type="text" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:bg-white transition-colors" />
+                               <label htmlFor="firstName" className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">First Name *</label>
+                               <input id="firstName" name="firstName" required type="text" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:bg-white transition-all" />
                             </div>
                             <div>
-                               <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Last Name *</label>
-                               <input required type="text" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:bg-white transition-colors" />
+                               <label htmlFor="lastName" className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Last Name *</label>
+                               <input id="lastName" name="lastName" required type="text" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:bg-white transition-all" />
                             </div>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                               <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Company Name</label>
-                               <input type="text" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:bg-white transition-colors" />
+                               <label htmlFor="companyName" className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Company Name</label>
+                               <input id="companyName" name="companyName" type="text" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:bg-white transition-all" />
                             </div>
                             <div>
-                               <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Profession/Role</label>
-                               <select className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:bg-white transition-colors text-stone-700">
+                               <label htmlFor="role" className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Profession/Role</label>
+                               <select id="role" name="role" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:bg-white transition-all text-stone-700">
                                  <option value="">Select an option</option>
                                  <option value="architect">Architect / Interior Designer</option>
                                  <option value="contractor">Contractor / Builder</option>
@@ -227,28 +263,28 @@ export function Contact() {
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                               <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Email Address *</label>
-                               <input required type="email" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:bg-white transition-colors" />
+                               <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Email Address *</label>
+                               <input id="email" name="email" required type="email" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:bg-white transition-all" />
                             </div>
                             <div>
-                               <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Phone / WhatsApp *</label>
-                               <input required type="tel" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:bg-white transition-colors" />
+                               <label htmlFor="phone" className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Phone / WhatsApp *</label>
+                               <input id="phone" name="phone" required type="tel" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:bg-white transition-all" />
                             </div>
                           </div>
 
                           {/* Dynamic Fields based on Active Tab */}
                           {activeTab === 'quote' && (
                             <div>
-                              <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">SKUs or Products of Interest</label>
-                              <input placeholder="e.g. VADO-IND-100" type="text" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:bg-white transition-colors" />
+                              <label htmlFor="quoteProducts" className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">SKUs or Products of Interest</label>
+                              <input id="quoteProducts" name="quoteProducts" placeholder="e.g. VADO-IND-100" type="text" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:bg-white transition-all" />
                             </div>
                           )}
 
                           {activeTab === 'project' && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div>
-                                 <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Project Type</label>
-                                 <select className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:bg-white transition-colors text-stone-700">
+                                 <label htmlFor="projectType" className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Project Type</label>
+                                 <select id="projectType" name="projectType" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:bg-white transition-all text-stone-700">
                                    <option value="residential">Residential</option>
                                    <option value="commercial">Commercial Office</option>
                                    <option value="hospitality">Hospitality / Hotel</option>
@@ -257,8 +293,8 @@ export function Contact() {
                                  </select>
                               </div>
                               <div>
-                                 <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Estimated Timeline</label>
-                                 <select className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:bg-white transition-colors text-stone-700">
+                                 <label htmlFor="projectTimeline" className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Estimated Timeline</label>
+                                 <select id="projectTimeline" name="projectTimeline" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:bg-white transition-all text-stone-700">
                                    <option value="immediate">Immediate</option>
                                    <option value="1-3-months">1-3 Months</option>
                                    <option value="3-6-months">3-6 Months</option>
@@ -271,12 +307,12 @@ export function Contact() {
                           {activeTab === 'showroom' && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div>
-                                 <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Preferred Date</label>
-                                 <input type="date" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:bg-white transition-colors text-stone-700" />
+                                 <label htmlFor="preferredDate" className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Preferred Date</label>
+                                 <input id="preferredDate" name="preferredDate" type="date" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:bg-white transition-all text-stone-700" />
                               </div>
                               <div>
-                                 <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Preferred Time</label>
-                                 <select className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:bg-white transition-colors text-stone-700">
+                                 <label htmlFor="preferredTime" className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Preferred Time</label>
+                                 <select id="preferredTime" name="preferredTime" className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:bg-white transition-all text-stone-700">
                                    <option value="morning">Morning (10AM - 1PM)</option>
                                    <option value="afternoon">Afternoon (1PM - 5PM)</option>
                                    <option value="evening">Evening (5PM - 8PM)</option>
@@ -286,11 +322,12 @@ export function Contact() {
                           )}
 
                           <div>
-                             <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Message or Additional Details</label>
-                             <textarea rows={4} className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:bg-white transition-colors resize-none"></textarea>
+                             <label htmlFor="message" className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Message or Additional Details</label>
+                             <textarea id="message" name="message" rows={4} className="w-full bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:bg-white transition-all resize-none"></textarea>
                           </div>
 
-                          <button type="submit" className="mt-4 bg-brand-secondary text-white py-4 px-8 rounded-full font-bold uppercase tracking-wider hover:bg-brand-primary transition-all shadow-lg hover:shadow-xl hover:-translate-y-1">
+                          <button type="submit" disabled={isSubmitting} className="mt-4 bg-brand-secondary text-white py-4 px-8 rounded-full font-bold uppercase tracking-wider hover:bg-brand-primary transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 disabled:opacity-50 disabled:hover:-translate-y-0 flex items-center justify-center gap-2">
+                            {isSubmitting && <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}
                             {activeTab === 'general' && 'Send Message'}
                             {activeTab === 'quote' && 'Request Quotation'}
                             {activeTab === 'project' && 'Submit Project Details'}

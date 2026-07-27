@@ -1,4 +1,3 @@
-import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 
 interface SEOProps {
@@ -54,8 +53,7 @@ export function SEO({
   const allSchemas = [defaultSchema, ...schemas];
 
   return (
-    <Helmet>
-      <html lang="en" />
+    <>
       <title>{title}</title>
       <meta name="description" content={description} />
       <meta name="keywords" content={keywords.join(', ')} />
@@ -82,6 +80,6 @@ export function SEO({
           {JSON.stringify(schema)}
         </script>
       ))}
-    </Helmet>
+    </>
   );
 }

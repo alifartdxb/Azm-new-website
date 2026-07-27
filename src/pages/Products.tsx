@@ -4,6 +4,7 @@ import { PRODUCTS_CATEGORIES, BRANDS, MOCK_PRODUCTS_DATABASE } from "../data";
 import { ArrowRight, SlidersHorizontal, ChevronRight, X, ArrowUpRight, Check, Search } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { SEO } from "../components/SEO";
+import { OptimizedImage } from "../components/OptimizedImage";
 
 export function Products() {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
@@ -361,7 +362,7 @@ export function Products() {
                      className="group bg-white rounded-2xl border border-stone-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full"
                    >
                      <div className="aspect-square bg-stone-50 relative overflow-hidden p-6 flex flex-col items-center justify-center">
-                       <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
+                       <OptimizedImage src={product.images[0]} alt={product.name} className="mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
                        <div className="absolute top-4 left-4">
                          <span className="bg-brand-primary/10 text-brand-primary text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded">
                            {product.brand}

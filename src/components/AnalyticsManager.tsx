@@ -1,11 +1,9 @@
-import { Helmet } from 'react-helmet-async';
-
 export function AnalyticsManager() {
   const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
   const clarityId = import.meta.env.VITE_CLARITY_PROJECT_ID;
 
   return (
-    <Helmet>
+    <>
       {/* Google Analytics 4 */}
       {gaId && (
         <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
@@ -33,6 +31,6 @@ export function AnalyticsManager() {
           `}
         </script>
       )}
-    </Helmet>
+    </>
   );
 }

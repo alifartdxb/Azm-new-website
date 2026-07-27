@@ -4,6 +4,7 @@ interface OptimizedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt: string;
   fallbackSrc?: string;
+  className?: string;
 }
 
 export function OptimizedImage({ 
