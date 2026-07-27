@@ -1,16 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package, Plus, Search, Filter, Upload, Download, FileSpreadsheet, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import { OptimizedImage } from '../../components/OptimizedImage';
 import { PRODUCTS_DATA, BRANDS_DATA, CATEGORIES_DATA } from '../../data';
 import { motion, AnimatePresence } from 'motion/react';
+import { getCollection, createDocument } from '../../services/db';
+import { useAuth } from '../../contexts/AuthContext';
 
 export function AdminProducts() {
   const [activeTab, setActiveTab] = useState<'list' | 'add' | 'import' | 'images'>('list');
   const [searchQuery, setSearchQuery] = useState('');
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const { role } = useAuth();
+  
+  // New Product Form State
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    sku: '',
+    brandId: '',
+    categoryId: '',
+    status: 'Draft',
+    price: 0
+  });
 
-  const filteredProducts = PRODUCTS_DATA.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    p.sku.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const data = await getCollection('products');
+      if (data.length > 0) {
+        setProducts(data);
+      } else {
+        // Fallback to local data if firestore is empty
+        setProducts(PRODUCTS_DATA);
+      }
+    } catch (e) {
+      console.error("Failed to load products from DB", e);
+      setProducts(PRODUCTS_DATA);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateProduct = async () => {
+    try {
+      await createDocument('products', {
+        ...newProduct,
+        createdAt: new Date().toISOString()
+      });
+      alert('Product created successfully!');
+      setActiveTab('list');
+      loadProducts();
+    } catch (e) {
+      console.error("Failed to create product", e);
+      alert('Failed to create product.');
+    }
+  };
+
+  const filteredProducts = products.filter(p => 
+    p.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    p.sku?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -28,24 +81,22 @@ export function AdminProducts() {
           >
             All Products
           </button>
-          <button 
-            onClick={() => setActiveTab('add')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'add' ? 'bg-white shadow-sm text-brand-secondary' : 'text-stone-500 hover:text-brand-secondary'}`}
-          >
-            Add New
-          </button>
-          <button 
-            onClick={() => setActiveTab('import')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'import' ? 'bg-white shadow-sm text-brand-secondary' : 'text-stone-500 hover:text-brand-secondary'}`}
-          >
-            Bulk Import
-          </button>
-          <button 
-            onClick={() => setActiveTab('images')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'images' ? 'bg-white shadow-sm text-brand-secondary' : 'text-stone-500 hover:text-brand-secondary'}`}
-          >
-            Bulk Images
-          </button>
+          {role !== 'viewer' && (
+            <>
+              <button 
+                onClick={() => setActiveTab('add')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'add' ? 'bg-white shadow-sm text-brand-secondary' : 'text-stone-500 hover:text-brand-secondary'}`}
+              >
+                Add New
+              </button>
+              <button 
+                onClick={() => setActiveTab('import')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'import' ? 'bg-white shadow-sm text-brand-secondary' : 'text-stone-500 hover:text-brand-secondary'}`}
+              >
+                Bulk Import
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -53,67 +104,75 @@ export function AdminProducts() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
           <div className="p-4 border-b border-stone-200 flex flex-col sm:flex-row gap-4 justify-between items-center bg-stone-50">
             <div className="relative w-full sm:w-96">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={16} />
+              <Search className="absolute top-1/2 left-3 transform -translate-y-1/2 text-stone-400" size={18} />
               <input 
                 type="text" 
-                placeholder="Search products by SKU or Name..." 
+                placeholder="Search by SKU, Name, or Attribute..." 
+                className="w-full pl-10 pr-4 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-brand-primary"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-stone-200 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary text-sm"
               />
             </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors w-full sm:w-auto justify-center">
-                <Filter size={16} /> Filter
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button className="flex items-center gap-2 px-4 py-2 border border-stone-200 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-100 flex-1 sm:flex-none justify-center">
+                <Filter size={16} /> Filters
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors w-full sm:w-auto justify-center">
+              <button className="flex items-center gap-2 px-4 py-2 border border-stone-200 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-100 flex-1 sm:flex-none justify-center">
                 <Download size={16} /> Export
               </button>
             </div>
           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-stone-50 text-stone-500 uppercase tracking-wider text-[10px] font-bold">
-                <tr>
-                  <th className="px-6 py-4">Product</th>
-                  <th className="px-6 py-4">Brand</th>
-                  <th className="px-6 py-4">Category</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-stone-50 text-stone-500 text-xs uppercase tracking-wider border-b border-stone-200">
+                  <th className="px-6 py-4 font-bold">Product</th>
+                  <th className="px-6 py-4 font-bold">SKU</th>
+                  <th className="px-6 py-4 font-bold">Category</th>
+                  <th className="px-6 py-4 font-bold">Status</th>
+                  <th className="px-6 py-4 font-bold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
-                {filteredProducts.map((product) => {
-                  const brand = BRANDS_DATA.find(b => b.id === product.brandId);
-                  const cat = CATEGORIES_DATA.find(c => c.id === product.categoryId);
-                  
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-stone-500">Loading products...</td>
+                  </tr>
+                ) : filteredProducts.map((product) => {
+                  const category = CATEGORIES_DATA.find(c => c.id === product.categoryId)?.name || product.categoryId || 'Unknown';
                   return (
-                    <tr key={product.id} className="hover:bg-stone-50 transition-colors">
+                    <tr key={product.id || product.sku} className="hover:bg-stone-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded border border-stone-200 overflow-hidden bg-white flex-shrink-0">
-                            <OptimizedImage src={product.thumbnail} alt={product.name} className="w-full h-full object-cover mix-blend-multiply" />
+                          <div className="w-12 h-12 rounded-lg bg-stone-100 border border-stone-200 overflow-hidden flex-shrink-0">
+                            {product.images?.[0] ? (
+                              <OptimizedImage src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-stone-400">
+                                <ImageIcon size={20} />
+                              </div>
+                            )}
                           </div>
                           <div>
-                            <div className="font-bold text-brand-secondary">{product.name}</div>
-                            <div className="font-mono text-xs text-stone-500 mt-1">{product.sku}</div>
+                            <p className="font-bold text-stone-800 text-sm">{product.name}</p>
+                            <p className="text-xs text-stone-500 mt-0.5">{product.brandId}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2 py-1 rounded bg-stone-100 text-stone-700 text-xs font-medium">
-                          {brand?.name}
-                        </span>
+                        <code className="text-xs font-mono bg-stone-100 px-2 py-1 rounded text-stone-700">{product.sku}</code>
                       </td>
-                      <td className="px-6 py-4 text-stone-600">{cat?.name}</td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold ${
-                          product.status === 'Available' ? 'bg-green-100 text-green-700' : 
-                          product.status === 'Coming Soon' ? 'bg-blue-100 text-blue-700' :
+                        <span className="text-sm text-stone-600">{category}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-block px-2 py-1 text-[10px] font-bold uppercase rounded ${
+                          product.status === 'Active' || product.status === 'Published' ? 'bg-green-100 text-green-700' : 
+                          product.status === 'Production' ? 'bg-blue-100 text-blue-700' :
                           'bg-orange-100 text-orange-700'
                         }`}>
-                          {product.status}
+                          {product.status || 'Draft'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -134,22 +193,42 @@ export function AdminProducts() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <div className="col-span-full">
               <label className="block text-sm font-bold text-stone-700 mb-2">Product Name</label>
-              <input type="text" className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-1 focus:ring-brand-primary focus:border-brand-primary" placeholder="e.g. Individual Brushed Gold Basin Mixer" />
+              <input 
+                type="text" 
+                value={newProduct.name}
+                onChange={e => setNewProduct({...newProduct, name: e.target.value})}
+                className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-1 focus:ring-brand-primary focus:border-brand-primary" 
+                placeholder="e.g. Individual Brushed Gold Basin Mixer" 
+              />
             </div>
             <div>
               <label className="block text-sm font-bold text-stone-700 mb-2">SKU Code</label>
-              <input type="text" className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-1 focus:ring-brand-primary focus:border-brand-primary" placeholder="e.g. VADO-IND-100" />
+              <input 
+                type="text" 
+                value={newProduct.sku}
+                onChange={e => setNewProduct({...newProduct, sku: e.target.value})}
+                className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-1 focus:ring-brand-primary focus:border-brand-primary" 
+                placeholder="e.g. VADO-IND-100" 
+              />
             </div>
             <div>
               <label className="block text-sm font-bold text-stone-700 mb-2">Brand</label>
-              <select className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-1 focus:ring-brand-primary focus:border-brand-primary">
+              <select 
+                value={newProduct.brandId}
+                onChange={e => setNewProduct({...newProduct, brandId: e.target.value})}
+                className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-1 focus:ring-brand-primary focus:border-brand-primary"
+              >
                 <option value="">Select Brand...</option>
                 {BRANDS_DATA.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-sm font-bold text-stone-700 mb-2">Category</label>
-              <select className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-1 focus:ring-brand-primary focus:border-brand-primary">
+              <select 
+                value={newProduct.categoryId}
+                onChange={e => setNewProduct({...newProduct, categoryId: e.target.value})}
+                className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-1 focus:ring-brand-primary focus:border-brand-primary"
+              >
                 <option value="">Select Category...</option>
                 {CATEGORIES_DATA.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
@@ -166,8 +245,8 @@ export function AdminProducts() {
           </div>
 
           <div className="flex justify-end gap-4 border-t border-stone-100 pt-6">
-            <button className="px-6 py-2 border border-stone-200 rounded-lg text-sm font-bold text-stone-600 hover:bg-stone-50">Cancel</button>
-            <button className="px-6 py-2 bg-brand-primary text-white rounded-lg text-sm font-bold hover:bg-brand-secondary transition-colors">Save Product</button>
+            <button onClick={() => setActiveTab('list')} className="px-6 py-2 border border-stone-200 rounded-lg text-sm font-bold text-stone-600 hover:bg-stone-50">Cancel</button>
+            <button onClick={handleCreateProduct} className="px-6 py-2 bg-brand-primary text-white rounded-lg text-sm font-bold hover:bg-brand-secondary transition-colors">Save Product</button>
           </div>
         </motion.div>
       )}
@@ -183,7 +262,6 @@ export function AdminProducts() {
               <Download size={16} /> Download Template
             </button>
           </div>
-
           <div className="bg-stone-50 border-2 border-dashed border-stone-300 rounded-xl p-12 text-center hover:bg-stone-100 transition-colors cursor-pointer mb-8">
             <FileSpreadsheet className="mx-auto text-brand-primary mb-4" size={48} />
             <h3 className="font-bold text-lg text-stone-700 mb-2">Upload Data File</h3>
@@ -192,58 +270,8 @@ export function AdminProducts() {
               Select File
             </button>
           </div>
-
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-4">
-            <AlertCircle className="text-blue-500 flex-shrink-0 mt-0.5" size={20} />
-            <div>
-              <h4 className="font-bold text-blue-900 text-sm">Required Columns</h4>
-              <p className="text-blue-700 text-sm mt-1 leading-relaxed">
-                Your import file must include: <code className="bg-blue-100 px-1 rounded">SKU</code>, <code className="bg-blue-100 px-1 rounded">Name</code>, <code className="bg-blue-100 px-1 rounded">Brand</code>, <code className="bg-blue-100 px-1 rounded">Category</code>. Products with existing SKUs will be updated.
-              </p>
-            </div>
-          </div>
         </motion.div>
       )}
-
-      {activeTab === 'images' && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-2xl border border-stone-200 p-8 shadow-sm">
-           <div className="mb-6">
-            <h2 className="text-xl font-bold font-display text-brand-secondary">Bulk Image Upload</h2>
-            <p className="text-stone-500 text-sm mt-1">Upload multiple images. Files named with SKU codes (e.g. VADO-100.jpg) will be automatically assigned to the matching product.</p>
-          </div>
-
-          <div className="bg-stone-50 border-2 border-dashed border-stone-300 rounded-xl p-12 text-center hover:bg-stone-100 transition-colors cursor-pointer mb-8">
-            <ImageIcon className="mx-auto text-brand-primary mb-4" size={48} />
-            <h3 className="font-bold text-lg text-stone-700 mb-2">Upload Images</h3>
-            <p className="text-stone-500 text-sm mb-4">Drag and drop multiple images here. They will be compressed and converted to WebP automatically.</p>
-            <button className="px-6 py-2 bg-white border border-stone-200 rounded-lg text-sm font-bold text-stone-600 hover:bg-stone-50 shadow-sm">
-              Select Images
-            </button>
-          </div>
-
-           <div className="bg-stone-50 rounded-xl p-6 border border-stone-200">
-            <h4 className="font-bold text-stone-700 text-sm mb-4">Recent Uploads Processing...</h4>
-            <div className="space-y-3">
-              {[
-                { name: 'VADO-IND-100_1.jpg', status: 'Converted to WebP', progress: 100 },
-                { name: 'VADO-IND-100_2.jpg', status: 'Compressing...', progress: 65 },
-                { name: 'JAQ-ART-400.png', status: 'Pending', progress: 0 },
-              ].map((file, i) => (
-                <div key={i} className="flex items-center justify-between bg-white p-3 rounded-lg border border-stone-100">
-                  <span className="text-sm font-mono text-stone-600">{file.name}</span>
-                  <div className="flex items-center gap-4">
-                    <span className="text-xs text-stone-400">{file.status}</span>
-                    <div className="w-24 h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-brand-primary" style={{ width: `${file.progress}%` }} />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      )}
-
     </div>
   );
 }

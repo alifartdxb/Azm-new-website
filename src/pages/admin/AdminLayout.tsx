@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import { 
   LayoutDashboard, 
   Package, 
@@ -22,6 +23,17 @@ import {
 export function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, role, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/admin/login');
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const navigation = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -73,9 +85,9 @@ export function AdminLayout() {
           </ul>
         </div>
         <div className="border-t border-stone-800 p-4">
-          <Link to="/" className="flex items-center gap-2 text-stone-400 hover:text-white text-sm">
+          <button onClick={handleLogout} className="flex items-center gap-2 text-stone-400 hover:text-white text-sm w-full text-left">
             <LogOut size={16} /> Exit Admin
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -125,7 +137,7 @@ export function AdminLayout() {
           <div className="flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="text-stone-500 focus:outline-none lg:hidden mr-4"
+              className="text-stone-500 focus:outline-none md:hidden mr-4"
             >
               <Menu size={24} />
             </button>
@@ -144,12 +156,12 @@ export function AdminLayout() {
               <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
             <div className="flex items-center gap-3 border-l border-stone-200 pl-4">
-              <div className="w-8 h-8 rounded-full bg-brand-secondary text-white flex items-center justify-center text-xs font-bold">
-                A
+              <div className="w-8 h-8 rounded-full bg-brand-secondary text-white flex items-center justify-center text-xs font-bold uppercase">
+                {user?.email?.charAt(0) || 'A'}
               </div>
               <div className="hidden md:block text-sm">
-                <p className="font-semibold text-stone-800">Admin User</p>
-                <p className="text-xs text-stone-500">Super Admin</p>
+                <p className="font-semibold text-stone-800 truncate max-w-[150px]">{user?.email || 'Admin User'}</p>
+                <p className="text-xs text-stone-500 capitalize">{role || 'User'}</p>
               </div>
             </div>
           </div>
