@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { SEO } from '../components/SEO';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { getProductBySlug, getBrandBySlug, getCategoryById, PRODUCTS_DATA } from '../data';
 import { ArrowLeft, ChevronRight, FileText, MessageSquare, Mail, Download, Ruler, Settings, CheckCircle2, Shield, Share2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { getCollection } from '../services/db';
 
 import { NotFoundPage } from './NotFoundPage';
 
@@ -12,12 +13,43 @@ export function ProductDetail() {
   const { brandSlug, categorySlug, productSlug, sku } = useParams<{ brandSlug?: string, categorySlug?: string, productSlug?: string, sku?: string }>();
   const navigate = useNavigate();
   
-  // Try to find the product based on either slug or sku (for backward compatibility)
-  const product = productSlug 
-    ? getProductBySlug(productSlug) 
-    : (sku ? PRODUCTS_DATA.find(p => p.sku === sku) : undefined);
-    
+  const [product, setProduct] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
+
+  useEffect(() => {
+    const loadProduct = async () => {
+      try {
+        const dbProducts = await getCollection('products');
+        
+        let foundProduct = null;
+        if (productSlug) {
+           foundProduct = dbProducts.find((p: any) => p.slug === productSlug);
+        } else if (sku) {
+           foundProduct = dbProducts.find((p: any) => p.sku === sku);
+        }
+
+        if (foundProduct) {
+          setProduct(foundProduct);
+        } else {
+          // Fallback to static data
+          const staticProduct = productSlug ? getProductBySlug(productSlug) : (sku ? PRODUCTS_DATA.find(p => p.sku === sku) : undefined);
+          setProduct(staticProduct);
+        }
+      } catch (e) {
+        console.error(e);
+        const staticProduct = productSlug ? getProductBySlug(productSlug) : (sku ? PRODUCTS_DATA.find(p => p.sku === sku) : undefined);
+        setProduct(staticProduct);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadProduct();
+  }, [productSlug, sku]);
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading product...</div>;
+  }
 
   if (!product) {
     return <NotFoundPage />;

@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CATEGORIES_DATA, BRANDS_DATA, PRODUCTS_DATA } from "../data";
 import { ArrowRight, SlidersHorizontal, ChevronRight, X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { SEO } from "../components/SEO";
 import { OptimizedImage } from "../components/OptimizedImage";
+import { getCollection } from "../services/db";
 
 export function Products() {
   const [searchParams] = useSearchParams();
@@ -15,9 +16,27 @@ export function Products() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(urlCategory ? [urlCategory] : []);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedFinishes, setSelectedFinishes] = useState<string[]>([]);
+  const [allProducts, setAllProducts] = useState<any[]>(PRODUCTS_DATA);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const dbProducts = await getCollection('products');
+        if (dbProducts && dbProducts.length > 0) {
+          setAllProducts(dbProducts.filter((p: any) => p.status === 'Active' || p.status === 'Published'));
+        }
+      } catch (err) {
+        console.error("Failed to load products", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   // Extract unique filter options
-  const allFinishes = Array.from(new Set(PRODUCTS_DATA.flatMap(p => p.finish || [])));
+  const allFinishes = Array.from(new Set(allProducts.flatMap(p => p.finish || []))) as string[];
 
   const toggleFilter = (list: string[], setList: (l: string[]) => void, value: string) => {
     if (list.includes(value)) {
@@ -35,7 +54,7 @@ export function Products() {
   };
 
   const filteredProducts = useMemo(() => {
-    let result = PRODUCTS_DATA;
+    let result = allProducts;
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
