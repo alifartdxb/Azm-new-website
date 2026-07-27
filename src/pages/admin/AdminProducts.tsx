@@ -1,28 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, Search, Filter, Upload, Download, FileSpreadsheet, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { Package, Plus, Search, Filter, Upload, Download, FileSpreadsheet, Image as ImageIcon, AlertCircle, Edit, Trash2, Copy, X } from 'lucide-react';
 import { OptimizedImage } from '../../components/OptimizedImage';
 import { PRODUCTS_DATA, BRANDS_DATA, CATEGORIES_DATA } from '../../data';
 import { motion, AnimatePresence } from 'motion/react';
-import { getCollection, createDocument } from '../../services/db';
+import { getCollection, createDocument, updateDocument, deleteDocument } from '../../services/db';
 import { useAuth } from '../../contexts/AuthContext';
 
 export function AdminProducts() {
-  const [activeTab, setActiveTab] = useState<'list' | 'add' | 'import' | 'images'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'add' | 'edit' | 'import' | 'images'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
   
   const { role } = useAuth();
   
-  // New Product Form State
-  const [newProduct, setNewProduct] = useState({
-    name: '',
-    sku: '',
-    brandId: '',
-    categoryId: '',
-    status: 'Draft',
-    price: 0
-  });
+  const defaultProduct = {
+    name: '', sku: '', brandId: '', categoryId: '', status: 'Draft',
+    shortDescription: '', fullDescription: '', features: '', technicalSpecs: '',
+    finish: '', color: '', material: '', dimensions: '', weight: '', warranty: '',
+    seoTitle: '', metaDescription: '', slug: '',
+    images: [],
+    collection: '', series: ''
+  };
+
+  const [formData, setFormData] = useState(defaultProduct);
 
   useEffect(() => {
     loadProducts();
@@ -32,12 +34,7 @@ export function AdminProducts() {
     try {
       setLoading(true);
       const data = await getCollection('products');
-      if (data.length > 0) {
-        setProducts(data);
-      } else {
-        // Fallback to local data if firestore is empty
-        setProducts(PRODUCTS_DATA);
-      }
+      setProducts(data.length > 0 ? data : PRODUCTS_DATA);
     } catch (e) {
       console.error("Failed to load products from DB", e);
       setProducts(PRODUCTS_DATA);
@@ -46,19 +43,52 @@ export function AdminProducts() {
     }
   };
 
-  const handleCreateProduct = async () => {
+  const handleSaveProduct = async (addAnother = false) => {
     try {
-      await createDocument('products', {
-        ...newProduct,
-        createdAt: new Date().toISOString()
-      });
-      alert('Product created successfully!');
-      setActiveTab('list');
+      if (activeTab === 'edit' && editingId) {
+        await updateDocument('products', editingId, formData);
+        alert('Product updated successfully!');
+      } else {
+        await createDocument('products', { ...formData, createdAt: new Date().toISOString() });
+        alert('Product created successfully!');
+      }
       loadProducts();
+      
+      if (addAnother) {
+        setFormData(defaultProduct);
+        setActiveTab('add');
+      } else {
+        setActiveTab('list');
+      }
     } catch (e) {
-      console.error("Failed to create product", e);
-      alert('Failed to create product.');
+      console.error("Failed to save product", e);
+      alert('Failed to save product.');
     }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this product?')) {
+      try {
+        await deleteDocument('products', id);
+        alert('Product deleted');
+        loadProducts();
+      } catch (e) {
+        console.error("Failed to delete", e);
+      }
+    }
+  };
+
+  const handleEdit = (product: any) => {
+    setFormData(product);
+    setEditingId(product.id || product.sku);
+    setActiveTab('edit');
+  };
+
+  const handleDuplicate = (product: any) => {
+    const duplicatedData = { ...product, sku: `${product.sku}-COPY`, name: `${product.name} (Copy)` };
+    delete duplicatedData.id;
+    setFormData(duplicatedData);
+    setActiveTab('add');
   };
 
   const filteredProducts = products.filter(p => 
@@ -66,11 +96,140 @@ export function AdminProducts() {
     p.sku?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const ProductForm = () => (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-2xl border border-stone-200 p-8 shadow-sm">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold font-display text-brand-secondary">
+          {activeTab === 'edit' ? 'Edit Product' : 'Create New Product'}
+        </h2>
+        <button onClick={() => setActiveTab('list')} className="text-stone-400 hover:text-stone-600">
+          <X size={24} />
+        </button>
+      </div>
+
+      <div className="space-y-8">
+        {/* Basic Info */}
+        <div>
+          <h3 className="text-lg font-bold text-stone-800 mb-4 border-b pb-2">Basic Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="col-span-full md:col-span-2">
+              <label className="block text-sm font-bold text-stone-700 mb-2">Product Name</label>
+              <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary" placeholder="e.g. Individual Brushed Gold Basin Mixer" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">SKU Code</label>
+              <input type="text" value={formData.sku} onChange={e => setFormData({...formData, sku: e.target.value})} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary" placeholder="e.g. VADO-IND-100" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Brand</label>
+              <select value={formData.brandId} onChange={e => setFormData({...formData, brandId: e.target.value})} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary">
+                <option value="">Select Brand...</option>
+                {BRANDS_DATA.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Category</label>
+              <select value={formData.categoryId} onChange={e => setFormData({...formData, categoryId: e.target.value})} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary">
+                <option value="">Select Category...</option>
+                {CATEGORIES_DATA.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Collection</label>
+              <input type="text" value={formData.collection || ''} onChange={e => setFormData({...formData, collection: e.target.value})} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary" placeholder="e.g. Individual" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Series</label>
+              <input type="text" value={formData.series || ''} onChange={e => setFormData({...formData, series: e.target.value})} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary" placeholder="e.g. Round" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Status</label>
+              <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary">
+                <option value="Active">Active</option>
+                <option value="Draft">Draft</option>
+                <option value="Archived">Archived</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Descriptions */}
+        <div>
+          <h3 className="text-lg font-bold text-stone-800 mb-4 border-b pb-2">Description</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Short Description</label>
+              <textarea value={formData.shortDescription || ''} onChange={e => setFormData({...formData, shortDescription: e.target.value})} rows={2} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary"></textarea>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Full Description</label>
+              <textarea value={formData.fullDescription || ''} onChange={e => setFormData({...formData, fullDescription: e.target.value})} rows={4} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary"></textarea>
+            </div>
+          </div>
+        </div>
+
+        {/* Product Details */}
+        <div>
+          <h3 className="text-lg font-bold text-stone-800 mb-4 border-b pb-2">Product Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Finish</label>
+              <input type="text" value={formData.finish || ''} onChange={e => setFormData({...formData, finish: e.target.value})} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Material</label>
+              <input type="text" value={formData.material || ''} onChange={e => setFormData({...formData, material: e.target.value})} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Dimensions</label>
+              <input type="text" value={formData.dimensions || ''} onChange={e => setFormData({...formData, dimensions: e.target.value})} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Warranty</label>
+              <input type="text" value={formData.warranty || ''} onChange={e => setFormData({...formData, warranty: e.target.value})} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary" placeholder="e.g. 15 Years" />
+            </div>
+          </div>
+        </div>
+
+        {/* SEO */}
+        <div>
+          <h3 className="text-lg font-bold text-stone-800 mb-4 border-b pb-2">SEO</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">SEO Title</label>
+              <input type="text" value={formData.seoTitle || ''} onChange={e => setFormData({...formData, seoTitle: e.target.value})} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Slug</label>
+              <input type="text" value={formData.slug || ''} onChange={e => setFormData({...formData, slug: e.target.value})} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary" />
+            </div>
+            <div className="col-span-full">
+              <label className="block text-sm font-bold text-stone-700 mb-2">Meta Description</label>
+              <textarea value={formData.metaDescription || ''} onChange={e => setFormData({...formData, metaDescription: e.target.value})} rows={2} className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-primary"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-4 border-t border-stone-100 mt-8 pt-6">
+        <button onClick={() => setActiveTab('list')} className="px-6 py-2 border border-stone-200 rounded-lg text-sm font-bold text-stone-600 hover:bg-stone-50">Cancel</button>
+        {activeTab === 'add' && (
+          <button onClick={() => handleSaveProduct(true)} className="px-6 py-2 border border-brand-primary text-brand-primary rounded-lg text-sm font-bold hover:bg-brand-primary hover:text-white transition-colors">
+            Save & Add Another
+          </button>
+        )}
+        <button onClick={() => handleSaveProduct(false)} className="px-6 py-2 bg-brand-primary text-white rounded-lg text-sm font-bold hover:bg-brand-secondary transition-colors">
+          {activeTab === 'edit' ? 'Save Changes' : 'Save Product'}
+        </button>
+      </div>
+    </motion.div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold font-display text-brand-secondary">Product Information Management</h1>
+          <h1 className="text-2xl font-bold font-display text-brand-secondary">Product Management</h1>
           <p className="text-stone-500 text-sm">Manage products, variants, documents, and media.</p>
         </div>
         
@@ -84,7 +243,7 @@ export function AdminProducts() {
           {role !== 'viewer' && (
             <>
               <button 
-                onClick={() => setActiveTab('add')}
+                onClick={() => { setFormData(defaultProduct); setActiveTab('add'); }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'add' ? 'bg-white shadow-sm text-brand-secondary' : 'text-stone-500 hover:text-brand-secondary'}`}
               >
                 Add New
@@ -139,8 +298,13 @@ export function AdminProducts() {
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-stone-500">Loading products...</td>
                   </tr>
+                ) : filteredProducts.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-stone-500">No products found.</td>
+                  </tr>
                 ) : filteredProducts.map((product) => {
                   const category = CATEGORIES_DATA.find(c => c.id === product.categoryId)?.name || product.categoryId || 'Unknown';
+                  const brand = BRANDS_DATA.find(b => b.id === product.brandId)?.name || product.brandId || 'Unknown';
                   return (
                     <tr key={product.id || product.sku} className="hover:bg-stone-50 transition-colors">
                       <td className="px-6 py-4">
@@ -155,8 +319,8 @@ export function AdminProducts() {
                             )}
                           </div>
                           <div>
-                            <p className="font-bold text-stone-800 text-sm">{product.name}</p>
-                            <p className="text-xs text-stone-500 mt-0.5">{product.brandId}</p>
+                            <p className="font-bold text-stone-800 text-sm max-w-[250px] truncate" title={product.name}>{product.name}</p>
+                            <p className="text-xs text-stone-500 mt-0.5">{brand}</p>
                           </div>
                         </div>
                       </td>
@@ -176,7 +340,17 @@ export function AdminProducts() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="text-brand-primary hover:text-brand-secondary font-medium text-xs uppercase tracking-wider">Edit</button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => handleEdit(product)} className="p-2 text-stone-400 hover:text-brand-primary hover:bg-stone-100 rounded-lg transition-colors" title="Edit">
+                            <Edit size={16} />
+                          </button>
+                          <button onClick={() => handleDuplicate(product)} className="p-2 text-stone-400 hover:text-blue-600 hover:bg-stone-100 rounded-lg transition-colors" title="Duplicate">
+                            <Copy size={16} />
+                          </button>
+                          <button onClick={() => handleDelete(product.id || product.sku)} className="p-2 text-stone-400 hover:text-red-600 hover:bg-stone-100 rounded-lg transition-colors" title="Delete">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -187,69 +361,7 @@ export function AdminProducts() {
         </motion.div>
       )}
 
-      {activeTab === 'add' && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-2xl border border-stone-200 p-8 shadow-sm">
-          <h2 className="text-xl font-bold font-display text-brand-secondary mb-6">Create New Product</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <div className="col-span-full">
-              <label className="block text-sm font-bold text-stone-700 mb-2">Product Name</label>
-              <input 
-                type="text" 
-                value={newProduct.name}
-                onChange={e => setNewProduct({...newProduct, name: e.target.value})}
-                className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-1 focus:ring-brand-primary focus:border-brand-primary" 
-                placeholder="e.g. Individual Brushed Gold Basin Mixer" 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">SKU Code</label>
-              <input 
-                type="text" 
-                value={newProduct.sku}
-                onChange={e => setNewProduct({...newProduct, sku: e.target.value})}
-                className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-1 focus:ring-brand-primary focus:border-brand-primary" 
-                placeholder="e.g. VADO-IND-100" 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">Brand</label>
-              <select 
-                value={newProduct.brandId}
-                onChange={e => setNewProduct({...newProduct, brandId: e.target.value})}
-                className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-1 focus:ring-brand-primary focus:border-brand-primary"
-              >
-                <option value="">Select Brand...</option>
-                {BRANDS_DATA.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">Category</label>
-              <select 
-                value={newProduct.categoryId}
-                onChange={e => setNewProduct({...newProduct, categoryId: e.target.value})}
-                className="w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-1 focus:ring-brand-primary focus:border-brand-primary"
-              >
-                <option value="">Select Category...</option>
-                {CATEGORIES_DATA.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-          </div>
-          
-          <div className="border-t border-stone-100 pt-8 mb-8">
-            <h3 className="text-lg font-bold text-brand-secondary mb-4">Product Images</h3>
-            <div className="border-2 border-dashed border-stone-300 rounded-xl p-8 text-center bg-stone-50 hover:bg-stone-100 transition-colors cursor-pointer">
-              <ImageIcon className="mx-auto text-stone-400 mb-4" size={32} />
-              <p className="font-medium text-stone-700 mb-1">Click to upload or drag and drop</p>
-              <p className="text-xs text-stone-500">SVG, PNG, JPG or WebP (max. 800x400px)</p>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-4 border-t border-stone-100 pt-6">
-            <button onClick={() => setActiveTab('list')} className="px-6 py-2 border border-stone-200 rounded-lg text-sm font-bold text-stone-600 hover:bg-stone-50">Cancel</button>
-            <button onClick={handleCreateProduct} className="px-6 py-2 bg-brand-primary text-white rounded-lg text-sm font-bold hover:bg-brand-secondary transition-colors">Save Product</button>
-          </div>
-        </motion.div>
-      )}
+      {(activeTab === 'add' || activeTab === 'edit') && <ProductForm />}
 
       {activeTab === 'import' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-2xl border border-stone-200 p-8 shadow-sm">
@@ -266,9 +378,10 @@ export function AdminProducts() {
             <FileSpreadsheet className="mx-auto text-brand-primary mb-4" size={48} />
             <h3 className="font-bold text-lg text-stone-700 mb-2">Upload Data File</h3>
             <p className="text-stone-500 text-sm mb-4">Drag and drop your .csv or .xlsx file here, or click to browse</p>
-            <button className="px-6 py-2 bg-white border border-stone-200 rounded-lg text-sm font-bold text-stone-600 hover:bg-stone-50 shadow-sm">
+            <input type="file" className="hidden" id="file-upload" accept=".csv, .xlsx" />
+            <label htmlFor="file-upload" className="px-6 py-2 bg-white border border-stone-200 rounded-lg text-sm font-bold text-stone-600 hover:bg-stone-50 shadow-sm cursor-pointer inline-block">
               Select File
-            </button>
+            </label>
           </div>
         </motion.div>
       )}

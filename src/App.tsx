@@ -17,6 +17,7 @@ const Blog = lazy(() => import("./pages/Blog").then(module => ({ default: module
 const BlogDetail = lazy(() => import("./pages/BlogDetail").then(module => ({ default: module.BlogDetail })));
 const Projects = lazy(() => import("./pages/Projects").then(module => ({ default: module.Projects })));
 const ProjectDetail = lazy(() => import("./pages/ProjectDetail").then(module => ({ default: module.ProjectDetail })));
+const Catalogues = lazy(() => import("./pages/Catalogues").then(module => ({ default: module.Catalogues })));
 const GenericPage = lazy(() => import("./pages/GenericPage").then(module => ({ default: module.GenericPage })));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then(module => ({ default: module.NotFoundPage })));
 
@@ -28,6 +29,9 @@ const AdminProducts = lazy(() => import("./pages/admin/AdminProducts").then(modu
 const AdminBrands = lazy(() => import("./pages/admin/AdminBrands").then(module => ({ default: module.AdminBrands })));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories").then(module => ({ default: module.AdminCategories })));
 const AdminBlogs = lazy(() => import("./pages/admin/AdminBlogs").then(module => ({ default: module.AdminBlogs })));
+const AdminProjects = lazy(() => import("./pages/admin/AdminProjects").then(module => ({ default: module.AdminProjects })));
+const AdminCatalogues = lazy(() => import("./pages/admin/AdminCatalogues").then(module => ({ default: module.AdminCatalogues })));
+const AdminLeads = lazy(() => import("./pages/admin/AdminLeads").then(module => ({ default: module.AdminLeads })));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers").then(module => ({ default: module.AdminUsers })));
 const AdminGeneric = lazy(() => import("./pages/admin/AdminGeneric").then(module => ({ default: module.AdminGeneric })));
 
@@ -51,12 +55,12 @@ export default function App() {
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="brands" element={<AdminBrands />} />
                 <Route path="categories" element={<AdminCategories />} />
-                <Route path="projects" element={<AdminGeneric />} />
+                <Route path="projects" element={<AdminProjects />} />
                 <Route path="blogs" element={<AdminBlogs />} />
                 <Route path="media" element={<AdminGeneric />} />
                 <Route path="seo" element={<AdminGeneric />} />
-                <Route path="catalogs" element={<AdminGeneric />} />
-                <Route path="leads" element={<AdminGeneric />} />
+                <Route path="catalogs" element={<AdminCatalogues />} />
+                <Route path="leads" element={<AdminLeads />} />
                 <Route path="users" element={<AdminUsers />} />
               </Route>
             </Route>
@@ -79,6 +83,8 @@ export default function App() {
               <Route path="blog/:slug" element={<BlogDetail />} />
               <Route path="projects" element={<Projects />} />
               <Route path="projects/:slug" element={<ProjectDetail />} />
+              
+              <Route path="catalogues" element={<Catalogues />} />
               
               <Route path="*" element={<NotFoundPage />} />
             </Route>
