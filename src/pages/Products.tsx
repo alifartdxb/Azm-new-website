@@ -1,42 +1,41 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
-import { PRODUCTS_CATEGORIES, BRANDS, MOCK_PRODUCTS_DATABASE } from "../data";
-import { ArrowRight, SlidersHorizontal, ChevronRight, X, ArrowUpRight, Check, Search } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { CATEGORIES_DATA, BRANDS_DATA, PRODUCTS_DATA } from "../data";
+import { ArrowRight, SlidersHorizontal, ChevronRight, X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { SEO } from "../components/SEO";
 import { OptimizedImage } from "../components/OptimizedImage";
 
 export function Products() {
+  const [searchParams] = useSearchParams();
+  const urlCategory = searchParams.get('category');
+  
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(urlCategory ? [urlCategory] : []);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedFinishes, setSelectedFinishes] = useState<string[]>([]);
-  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
-  const [selectedSeries, setSelectedSeries] = useState<string[]>([]);
-  const [selectedInstallationTypes, setSelectedInstallationTypes] = useState<string[]>([]);
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
-  const [sortOption, setSortOption] = useState<"name-asc" | "name-desc" | "newest">("name-asc");
 
   // Extract unique filter options
-  const allFinishes = Array.from(new Set(MOCK_PRODUCTS_DATABASE.flatMap(p => p.finish || [])));
-  const allCollections = Array.from(new Set(MOCK_PRODUCTS_DATABASE.map(p => p.collectionName).filter(Boolean) as string[]));
-  const allSeries = Array.from(new Set(MOCK_PRODUCTS_DATABASE.map(p => p.series).filter(Boolean)));
-  const allInstallationTypes = Array.from(new Set(MOCK_PRODUCTS_DATABASE.flatMap(p => p.installationType || [])));
-  const allColors = Array.from(new Set(MOCK_PRODUCTS_DATABASE.flatMap(p => p.color || [])));
-  const allApplications = Array.from(new Set(MOCK_PRODUCTS_DATABASE.flatMap(p => p.application || [])));
+  const allFinishes = Array.from(new Set(PRODUCTS_DATA.flatMap(p => p.finish || [])));
 
   const toggleFilter = (list: string[], setList: (l: string[]) => void, value: string) => {
     if (list.includes(value)) {
-      setList(list.filter(v => v !== value));
+      setList(list.filter(item => item !== value));
     } else {
       setList([...list, value]);
     }
   };
 
+  const clearAllFilters = () => {
+    setSelectedCategories([]);
+    setSelectedBrands([]);
+    setSelectedFinishes([]);
+    setSearchQuery("");
+  };
+
   const filteredProducts = useMemo(() => {
-    let result = MOCK_PRODUCTS_DATABASE;
+    let result = PRODUCTS_DATA;
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -48,376 +47,195 @@ export function Products() {
     }
 
     if (selectedCategories.length > 0) {
-      result = result.filter(p => selectedCategories.includes(p.category));
+      result = result.filter(p => selectedCategories.includes(p.categoryId));
     }
 
     if (selectedBrands.length > 0) {
-      result = result.filter(p => selectedBrands.includes(p.brand));
+      result = result.filter(p => selectedBrands.includes(p.brandId));
     }
 
     if (selectedFinishes.length > 0) {
-      result = result.filter(p => p.finish.some(f => selectedFinishes.includes(f)));
+      result = result.filter(p => p.finish && p.finish.some(f => selectedFinishes.includes(f)));
     }
-
-    if (selectedCollections.length > 0) {
-      result = result.filter(p => p.collectionName && selectedCollections.includes(p.collectionName));
-    }
-
-    if (selectedSeries.length > 0) {
-      result = result.filter(p => selectedSeries.includes(p.series));
-    }
-
-    if (selectedInstallationTypes.length > 0) {
-      result = result.filter(p => p.installationType?.some(i => selectedInstallationTypes.includes(i)));
-    }
-
-    if (selectedColors.length > 0) {
-      result = result.filter(p => p.color?.some(c => selectedColors.includes(c)));
-    }
-
-    if (selectedApplications.length > 0) {
-      result = result.filter(p => p.application?.some(a => selectedApplications.includes(a)));
-    }
-
-    // Sorting
-    result = [...result].sort((a, b) => {
-      if (sortOption === "name-asc") return a.name.localeCompare(b.name);
-      if (sortOption === "name-desc") return b.name.localeCompare(a.name);
-      return 0; // "newest" would normally sort by date, for mock we do nothing
-    });
 
     return result;
-  }, [
-    searchQuery, selectedCategories, selectedBrands, selectedFinishes, 
-    selectedCollections, selectedSeries, selectedInstallationTypes, 
-    selectedColors, selectedApplications, sortOption
-  ]);
-
-  const FilterSection = ({ title, options, selected, onToggle }: { title: string, options: string[], selected: string[], onToggle: (val: string) => void }) => (
-    <div className="mb-8">
-      <h3 className="text-sm font-bold uppercase tracking-wider text-brand-secondary mb-4">{title}</h3>
-      <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-        {options.map(opt => (
-          <label key={opt} className="flex items-center gap-3 cursor-pointer group">
-            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-              selected.includes(opt) ? "bg-brand-primary border-brand-primary text-white" : "border-stone-300 bg-white group-hover:border-brand-primary"
-            }`}>
-              {selected.includes(opt) && <Check size={14} />}
-            </div>
-            <span className={`text-sm ${selected.includes(opt) ? "text-brand-secondary font-medium" : "text-stone-600 group-hover:text-brand-secondary"}`}>
-              {opt}
-            </span>
-          </label>
-        ))}
-      </div>
-    </div>
-  );
-
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": "https://www.azmgroup.ae"
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "Catalog",
-        "item": "https://www.azmgroup.ae/products"
-      }
-    ]
-  };
+  }, [searchQuery, selectedCategories, selectedBrands, selectedFinishes]);
 
   return (
-    <div className="flex-grow flex flex-col bg-stone-50 font-sans text-brand-dark min-h-screen">
+    <div className="flex-grow flex flex-col bg-stone-50">
       <SEO 
-        title="Luxury Bathroom & Kitchen Products Catalog | AZM Group"
-        description="Browse our extensive collection of premium bathroom and kitchen sanitaryware, faucets, ceramics, and architectural finishes from top brands like VADO UK."
-        schemas={[breadcrumbSchema]}
+        title="Product Catalogue | AZM Group"
+        description="Browse our extensive catalogue of premium bathroom and kitchen solutions."
+        keywords={["Catalogue", "Bathroom Products", "Kitchen Sinks", "Mixers", "Showers"]}
       />
-      {/* Breadcrumb Navigation */}
-      <div className="bg-white border-b border-stone-100 py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center text-xs font-semibold uppercase tracking-widest text-stone-500 overflow-x-auto whitespace-nowrap">
-          <Link to="/" className="hover:text-brand-primary transition-colors">Home</Link>
-          <ChevronRight size={14} className="mx-2 flex-shrink-0" />
-          <span className="text-brand-secondary">Catalog</span>
+
+      <div className="pt-24 pb-4 border-b border-stone-100 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex text-xs font-bold uppercase tracking-wider text-stone-500 overflow-x-auto whitespace-nowrap">
+            <Link to="/" className="hover:text-brand-primary transition-colors">Home</Link>
+            <ChevronRight size={14} className="mx-2" />
+            <span className="text-brand-secondary">All Products</span>
+          </nav>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full flex flex-col lg:flex-row gap-10">
-        
-        {/* Mobile Filters Toggle & Search bar */}
-        <div className="lg:hidden flex flex-col gap-4 mb-4">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
-            <input 
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search products..."
-              className="w-full pl-12 pr-4 py-3 bg-white border border-stone-200 rounded-full focus:outline-none focus:border-brand-primary shadow-sm"
-            />
-          </div>
-          <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-stone-200">
-             <button 
-               onClick={() => setIsMobileFiltersOpen(true)}
-               className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-brand-secondary"
-             >
-               <SlidersHorizontal size={18} /> Filters ({selectedCategories.length + selectedBrands.length + selectedFinishes.length})
-             </button>
-             <select 
-               value={sortOption}
-               onChange={(e) => setSortOption(e.target.value as any)}
-               className="bg-transparent text-sm font-medium focus:outline-none"
-             >
-               <option value="name-asc">Alphabetical A-Z</option>
-               <option value="name-desc">Alphabetical Z-A</option>
-               <option value="newest">Newest Arrivals</option>
-             </select>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col lg:flex-row gap-8 items-start w-full">
+        {/* Mobile Filter Toggle */}
+        <div className="lg:hidden w-full flex justify-between items-center bg-white p-4 rounded-xl border border-stone-200">
+          <span className="font-bold text-brand-secondary">Showing {filteredProducts.length} Results</span>
+          <button 
+            onClick={() => setIsMobileFiltersOpen(true)}
+            className="flex items-center gap-2 bg-stone-100 text-stone-700 px-4 py-2 rounded-lg font-bold text-sm"
+          >
+            <SlidersHorizontal size={16} /> Filters
+          </button>
         </div>
 
         {/* Sidebar Filters */}
-        <div className={`fixed inset-0 z-[100] lg:z-0 lg:static lg:block lg:w-1/4 bg-white lg:bg-transparent overflow-y-auto lg:overflow-visible transition-transform duration-300 ${isMobileFiltersOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-           <div className="p-6 lg:p-0">
-              <div className="flex justify-between items-center lg:hidden mb-8">
-                 <h2 className="text-xl font-bold font-display text-brand-secondary">Refine Search</h2>
-                 <button onClick={() => setIsMobileFiltersOpen(false)} className="p-2 bg-stone-100 rounded-full text-stone-600">
-                   <X size={20} />
-                 </button>
+        <AnimatePresence>
+          {(isMobileFiltersOpen || window.innerWidth >= 1024) && (
+            <motion.div 
+              initial={{ x: -300, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -300, opacity: 0 }}
+              className={`fixed inset-y-0 left-0 z-50 w-4/5 max-w-sm bg-white p-6 overflow-y-auto shadow-2xl lg:static lg:w-1/4 lg:max-w-none lg:bg-transparent lg:p-0 lg:shadow-none lg:block lg:flex-shrink-0 ${isMobileFiltersOpen ? 'block' : 'hidden'}`}
+            >
+              <div className="flex justify-between items-center mb-8 lg:hidden">
+                <h3 className="font-bold font-display text-2xl text-brand-secondary">Filters</h3>
+                <button onClick={() => setIsMobileFiltersOpen(false)} className="p-2 text-stone-400 bg-stone-100 rounded-full"><X size={20} /></button>
               </div>
 
-              <div className="bg-white lg:border border-stone-200 rounded-2xl lg:p-6 lg:shadow-sm">
-                 <div className="flex justify-between items-center mb-6 pb-6 border-b border-stone-100">
-                    <h2 className="font-bold text-brand-secondary flex items-center gap-2 font-display">
-                      <SlidersHorizontal size={18} className="text-brand-primary" /> Filters
-                    </h2>
-                    {(selectedCategories.length > 0 || selectedBrands.length > 0 || selectedFinishes.length > 0 || selectedCollections.length > 0 || selectedSeries.length > 0 || selectedInstallationTypes.length > 0 || selectedColors.length > 0 || selectedApplications.length > 0) && (
-                      <button 
-                        onClick={() => { 
-                          setSelectedCategories([]); setSelectedBrands([]); setSelectedFinishes([]); 
-                          setSelectedCollections([]); setSelectedSeries([]); setSelectedInstallationTypes([]);
-                          setSelectedColors([]); setSelectedApplications([]);
-                        }}
-                        className="text-xs font-semibold text-stone-400 hover:text-brand-primary uppercase tracking-wider"
-                      >
-                        Clear All
-                      </button>
-                    )}
-                 </div>
-
-                 <FilterSection 
-                   title="Category" 
-                   options={PRODUCTS_CATEGORIES} 
-                   selected={selectedCategories} 
-                   onToggle={(val) => toggleFilter(selectedCategories, setSelectedCategories, val)} 
-                 />
-
-                 <FilterSection 
-                   title="Brand" 
-                   options={BRANDS} 
-                   selected={selectedBrands} 
-                   onToggle={(val) => toggleFilter(selectedBrands, setSelectedBrands, val)} 
-                 />
-
-                 <FilterSection 
-                   title="Collection" 
-                   options={allCollections} 
-                   selected={selectedCollections} 
-                   onToggle={(val) => toggleFilter(selectedCollections, setSelectedCollections, val)} 
-                 />
-
-                 <FilterSection 
-                   title="Series" 
-                   options={allSeries} 
-                   selected={selectedSeries} 
-                   onToggle={(val) => toggleFilter(selectedSeries, setSelectedSeries, val)} 
-                 />
-
-                 <FilterSection 
-                   title="Finish" 
-                   options={allFinishes} 
-                   selected={selectedFinishes} 
-                   onToggle={(val) => toggleFilter(selectedFinishes, setSelectedFinishes, val)} 
-                 />
-
-                 <FilterSection 
-                   title="Installation Type" 
-                   options={allInstallationTypes} 
-                   selected={selectedInstallationTypes} 
-                   onToggle={(val) => toggleFilter(selectedInstallationTypes, setSelectedInstallationTypes, val)} 
-                 />
-
-                 <FilterSection 
-                   title="Color" 
-                   options={allColors} 
-                   selected={selectedColors} 
-                   onToggle={(val) => toggleFilter(selectedColors, setSelectedColors, val)} 
-                 />
-
-                 <FilterSection 
-                   title="Application" 
-                   options={allApplications} 
-                   selected={selectedApplications} 
-                   onToggle={(val) => toggleFilter(selectedApplications, setSelectedApplications, val)} 
-                 />
-              </div>
-           </div>
-        </div>
-
-        {/* Products Grid */}
-        <div className="lg:w-3/4 flex flex-col">
-           {/* Desktop utilities */}
-           <div className="hidden lg:flex justify-between items-center mb-8 bg-white p-4 rounded-2xl border border-stone-200 shadow-sm">
-              <div className="flex-grow max-w-md mr-8 relative">
-                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
-                 <input 
-                   type="text"
-                   value={searchQuery}
-                   onChange={(e) => setSearchQuery(e.target.value)}
-                   placeholder="Search products by SKU, name, or series..."
-                   className="w-full pl-12 pr-4 py-3 bg-stone-50 border border-stone-100 rounded-full focus:outline-none focus:border-brand-primary focus:bg-white transition-colors"
-                 />
-              </div>
-              
-              <div className="flex items-center gap-4">
-                 <span className="text-sm text-stone-500 font-medium">Viewing <span className="text-brand-secondary font-bold">{filteredProducts.length}</span> Products</span>
-                 <div className="h-6 w-px bg-stone-200"></div>
-                 <select 
-                   value={sortOption}
-                   onChange={(e) => setSortOption(e.target.value as any)}
-                   className="bg-stone-50 border border-stone-200 rounded-lg px-4 py-2 text-sm font-medium focus:outline-none focus:border-brand-primary"
-                 >
-                   <option value="name-asc">Alphabetical A-Z</option>
-                   <option value="name-desc">Alphabetical Z-A</option>
-                   <option value="newest">Newest Arrivals</option>
-                 </select>
-              </div>
-           </div>
-
-           {/* Active Filters */}
-           {(selectedCategories.length > 0 || selectedBrands.length > 0 || selectedFinishes.length > 0 || selectedCollections.length > 0 || selectedSeries.length > 0 || selectedInstallationTypes.length > 0 || selectedColors.length > 0 || selectedApplications.length > 0) && (
-             <div className="flex flex-wrap gap-2 mb-6">
-                {selectedCategories.map(c => (
-                  <span key={c} className="bg-brand-secondary text-white text-xs font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1">
-                    {c} <button onClick={() => toggleFilter(selectedCategories, setSelectedCategories, c)}><X size={12} /></button>
-                  </span>
-                ))}
-                {selectedBrands.map(b => (
-                  <span key={b} className="bg-brand-secondary text-white text-xs font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1">
-                    {b} <button onClick={() => toggleFilter(selectedBrands, setSelectedBrands, b)}><X size={12} /></button>
-                  </span>
-                ))}
-                {selectedCollections.map(c => (
-                  <span key={c} className="bg-brand-secondary text-white text-xs font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1">
-                    {c} <button onClick={() => toggleFilter(selectedCollections, setSelectedCollections, c)}><X size={12} /></button>
-                  </span>
-                ))}
-                {selectedSeries.map(s => (
-                  <span key={s} className="bg-brand-secondary text-white text-xs font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1">
-                    {s} <button onClick={() => toggleFilter(selectedSeries, setSelectedSeries, s)}><X size={12} /></button>
-                  </span>
-                ))}
-                {selectedFinishes.map(f => (
-                  <span key={f} className="bg-brand-secondary text-white text-xs font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1">
-                    {f} <button onClick={() => toggleFilter(selectedFinishes, setSelectedFinishes, f)}><X size={12} /></button>
-                  </span>
-                ))}
-                {selectedInstallationTypes.map(i => (
-                  <span key={i} className="bg-brand-secondary text-white text-xs font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1">
-                    {i} <button onClick={() => toggleFilter(selectedInstallationTypes, setSelectedInstallationTypes, i)}><X size={12} /></button>
-                  </span>
-                ))}
-                {selectedColors.map(c => (
-                  <span key={c} className="bg-brand-secondary text-white text-xs font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1">
-                    {c} <button onClick={() => toggleFilter(selectedColors, setSelectedColors, c)}><X size={12} /></button>
-                  </span>
-                ))}
-                {selectedApplications.map(a => (
-                  <span key={a} className="bg-brand-secondary text-white text-xs font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1">
-                    {a} <button onClick={() => toggleFilter(selectedApplications, setSelectedApplications, a)}><X size={12} /></button>
-                  </span>
-                ))}
-             </div>
-           )}
-
-           {/* Grid */}
-           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-             <AnimatePresence>
-               {filteredProducts.map((product) => (
-                 <motion.div
-                   layout
-                   initial={{ opacity: 0, scale: 0.9 }}
-                   animate={{ opacity: 1, scale: 1 }}
-                   exit={{ opacity: 0, scale: 0.9 }}
-                   transition={{ duration: 0.3 }}
-                   key={product.sku}
-                 >
-                   <Link 
-                     to={`/products/${product.sku}`}
-                     className="group bg-white rounded-2xl border border-stone-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full"
-                   >
-                     <div className="aspect-square bg-stone-50 relative overflow-hidden p-6 flex flex-col items-center justify-center">
-                       <OptimizedImage src={product.images[0]} alt={product.name} className="mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
-                       <div className="absolute top-4 left-4">
-                         <span className="bg-brand-primary/10 text-brand-primary text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded">
-                           {product.brand}
-                         </span>
-                       </div>
-                       {/* Glass hover details */}
-                       <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                          <div className="bg-white/90 backdrop-blur text-brand-secondary text-xs font-medium px-3 py-2 rounded shadow-lg flex justify-between items-center">
-                            <span>View Specifications</span>
-                            <ArrowUpRight size={14} />
-                          </div>
-                       </div>
-                     </div>
-                     <div className="p-6 flex flex-col flex-grow">
-                       <div className="flex gap-2 items-center mb-2">
-                         <p className="text-stone-400 text-xs font-semibold uppercase tracking-wider">{product.category}</p>
-                         <span className="w-1 h-1 rounded-full bg-stone-300"></span>
-                         <p className="text-stone-400 text-xs font-semibold uppercase tracking-wider">{product.series}</p>
-                       </div>
-                       <h4 className="text-base font-bold text-brand-secondary group-hover:text-brand-primary transition-colors mb-2 line-clamp-2">
-                         {product.name}
-                       </h4>
-                       <p className="text-xs font-mono text-stone-500 mt-auto pt-4 border-t border-stone-50 flex items-center justify-between">
-                         <span>SKU: {product.sku}</span>
-                         <span className="flex items-center gap-1 font-sans text-brand-primary font-semibold">Details <ArrowRight size={12} /></span>
-                       </p>
-                     </div>
-                   </Link>
-                 </motion.div>
-               ))}
-             </AnimatePresence>
-             {filteredProducts.length === 0 && (
-                <div className="col-span-full py-24 text-center bg-white rounded-2xl border border-stone-100">
-                  <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-4 text-stone-400">
-                    <SlidersHorizontal size={24} />
-                  </div>
-                  <h3 className="text-xl font-bold text-brand-secondary mb-2">No products found</h3>
-                  <p className="text-stone-500">Try adjusting your filters or search query to find what you're looking for.</p>
-                  <button 
-                    onClick={() => { 
-                      setSelectedCategories([]); setSelectedBrands([]); setSelectedFinishes([]); 
-                      setSelectedCollections([]); setSelectedSeries([]); setSelectedInstallationTypes([]);
-                      setSelectedColors([]); setSelectedApplications([]);
-                      setSearchQuery(""); 
-                    }}
-                    className="mt-6 text-brand-primary font-semibold hover:underline uppercase tracking-wider text-sm"
-                  >
-                    Clear All Filters
-                  </button>
+              <div className="space-y-8 lg:sticky lg:top-32">
+                <div>
+                  <h4 className="text-sm font-bold uppercase tracking-widest text-stone-500 mb-4 flex items-center gap-2"><Search size={16} /> Search</h4>
+                  <input 
+                    type="text" 
+                    placeholder="Search SKU or Name..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-white border border-stone-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
+                  />
                 </div>
-             )}
-           </div>
+
+                <FilterSection title="Brands" options={BRANDS_DATA.map(b => ({id: b.id, name: b.name}))} selected={selectedBrands} toggle={(val) => toggleFilter(selectedBrands, setSelectedBrands, val)} />
+                <FilterSection title="Categories" options={CATEGORIES_DATA.map(c => ({id: c.id, name: c.name}))} selected={selectedCategories} toggle={(val) => toggleFilter(selectedCategories, setSelectedCategories, val)} />
+                <FilterSection title="Finishes" options={allFinishes.map(f => ({id: f, name: f}))} selected={selectedFinishes} toggle={(val) => toggleFilter(selectedFinishes, setSelectedFinishes, val)} />
+
+                <button 
+                  onClick={clearAllFilters}
+                  className="w-full py-3 bg-stone-100 text-stone-600 rounded-lg font-bold text-sm uppercase tracking-wider hover:bg-stone-200 transition-colors"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Backdrop for mobile */}
+        {isMobileFiltersOpen && (
+          <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsMobileFiltersOpen(false)} />
+        )}
+
+        {/* Product Grid */}
+        <div className="w-full lg:w-3/4">
+          <div className="hidden lg:flex justify-between items-center mb-8 bg-white p-4 rounded-xl border border-stone-200">
+            <h1 className="text-2xl font-bold font-display text-brand-secondary">
+              Product Catalogue
+              <span className="ml-3 text-sm font-normal text-stone-400 bg-stone-100 px-3 py-1 rounded-full">{filteredProducts.length} Items</span>
+            </h1>
+          </div>
+
+          {filteredProducts.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-stone-200 p-16 text-center">
+              <Search size={48} className="mx-auto text-stone-200 mb-6" />
+              <h3 className="text-2xl font-bold font-display text-brand-secondary mb-2">No products found</h3>
+              <p className="text-stone-500 max-w-md mx-auto mb-8">We couldn't find any products matching your current filters. Try adjusting your criteria or clear all filters.</p>
+              <button onClick={clearAllFilters} className="inline-flex items-center gap-2 bg-brand-primary text-white px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-wider hover:bg-brand-secondary transition-colors">
+                Clear Filters
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredProducts.map(product => {
+                const brand = BRANDS_DATA.find(b => b.id === product.brandId);
+                const category = CATEGORIES_DATA.find(c => c.id === product.categoryId);
+                
+                return (
+                  <Link 
+                    key={product.id} 
+                    to={`/products/${brand?.slug}/${category?.slug}/${product.slug}`}
+                    className="group bg-white rounded-2xl border border-stone-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col"
+                  >
+                    <div className="aspect-square relative overflow-hidden bg-stone-50 p-6 flex items-center justify-center">
+                      <OptimizedImage 
+                        src={product.thumbnail || product.images[0]} 
+                        alt={product.name}
+                        className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-4 left-4">
+                        <span className="bg-white/90 backdrop-blur-sm text-[10px] font-bold uppercase tracking-wider text-brand-secondary px-2 py-1 rounded shadow-sm">
+                          {brand?.name}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-6 flex flex-col flex-grow">
+                      <h3 className="font-bold text-lg text-brand-secondary mb-1 group-hover:text-brand-primary transition-colors line-clamp-2">
+                        {product.name}
+                      </h3>
+                      <p className="font-mono text-xs text-stone-400 mb-4">{product.sku}</p>
+                      
+                      <div className="mt-auto pt-4 border-t border-stone-100 flex items-center justify-between">
+                        <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">{category?.name}</span>
+                        <ArrowRight size={16} className="text-brand-primary opacity-0 group-hover:opacity-100 transform -translate-x-2 group-hover:translate-x-0 transition-all" />
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
-      
+    </div>
+  );
+}
+
+function FilterSection({ title, options, selected, toggle }: { title: string, options: {id: string, name: string}[], selected: string[], toggle: (val: string) => void }) {
+  const [isOpen, setIsOpen] = useState(true);
+
+  if (options.length === 0) return null;
+
+  return (
+    <div className="border-b border-stone-200 pb-6">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full text-left font-bold text-sm uppercase tracking-widest text-brand-secondary mb-4"
+      >
+        {title}
+        <ChevronRight size={16} className={`transform transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-3 pt-2">
+              {options.map((opt) => (
+                <label key={opt.id} className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selected.includes(opt.id) ? 'bg-brand-primary border-brand-primary text-white' : 'border-stone-300 group-hover:border-brand-primary'}`}>
+                    {selected.includes(opt.id) && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                  </div>
+                  <span className={`text-sm ${selected.includes(opt.id) ? 'font-bold text-brand-secondary' : 'text-stone-600 group-hover:text-brand-primary transition-colors'}`}>{opt.name}</span>
+                </label>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

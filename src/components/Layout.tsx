@@ -11,7 +11,7 @@ import {
   Search,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { PRODUCTS_CATEGORIES } from "../data";
+import { CATEGORIES_DATA } from "../data";
 import { PredictiveSearch } from "./PredictiveSearch";
 import { AnalyticsManager } from "./AnalyticsManager";
 
@@ -151,10 +151,10 @@ export function Layout() {
                     <div className="col-span-1">
                       <h3 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-6">By Category</h3>
                       <ul className="space-y-4">
-                        {PRODUCTS_CATEGORIES.map(cat => (
-                          <li key={cat}>
-                            <Link to={`/products/${cat.toLowerCase().replace(/\s+/g, "-")}`} className="text-stone-600 hover:text-brand-primary transition-colors font-medium">
-                              {cat}
+                        {CATEGORIES_DATA.map(cat => (
+                          <li key={cat.id}>
+                            <Link to={`/products?category=${cat.id}`} className="text-stone-600 hover:text-brand-primary transition-colors font-medium">
+                              {cat.name}
                             </Link>
                           </li>
                         ))}

@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Loader2, ArrowRight } from 'lucide-react';
 import { searchProducts } from '../data';
-import { ProductCatalog } from '../types';
+import { Product } from '../types';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { OptimizedImage } from './OptimizedImage';
 
 export function PredictiveSearch({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<ProductCatalog[]>([]);
+  const [results, setResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);

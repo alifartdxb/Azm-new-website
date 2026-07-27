@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { PRODUCTS_CATEGORIES, MOCK_PRODUCTS_DATABASE } from "../data";
+import { CATEGORIES_DATA, PRODUCTS_DATA, BRANDS_DATA } from "../data";
 import { motion, useScroll, useTransform, AnimatePresence } from "motion/react";
 import { ArrowRight, Download, Droplet, CheckCircle, MapPin, Beaker, ShieldCheck, Mail, ArrowUpRight, ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
@@ -279,7 +279,7 @@ export function Home() {
            </div>
            
            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-             {MOCK_PRODUCTS_DATABASE.slice(0, 4).concat(MOCK_PRODUCTS_DATABASE[0]).slice(0, 4).map((product, idx) => (
+            {PRODUCTS_DATA.slice(0, 4).map((product, idx) => (
                 <div key={`${product.sku}-${idx}`} className="group relative bg-stone-50 rounded-2xl border border-stone-100 p-6 hover:shadow-2xl hover:shadow-brand-secondary/5 transition-all duration-300">
                   <div className="absolute top-4 left-4 z-10">
                     <span className="bg-brand-primary text-white text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full">{product.series}</span>
@@ -289,7 +289,7 @@ export function Home() {
                      <div className="absolute inset-0 bg-brand-secondary/0 group-hover:bg-brand-secondary/5 transition-colors duration-300"></div>
                   </div>
                   <div>
-                    <p className="text-brand-primary text-xs font-semibold uppercase tracking-wider mb-2">{product.brand}</p>
+                    <p className="text-brand-primary text-xs font-semibold uppercase tracking-wider mb-2">{BRANDS_DATA.find(b => b.id === product.brandId)?.name}</p>
                     <h4 className="text-lg font-bold text-brand-secondary mb-2 line-clamp-1" title={product.name}>{product.name}</h4>
                     <p className="text-sm text-stone-500 line-clamp-2 mb-4">{product.description}</p>
                     <Link to={`/products/${product.sku}`} className="text-sm font-semibold text-brand-secondary flex items-center gap-1 group-hover:text-brand-primary transition-colors">

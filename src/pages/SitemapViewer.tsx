@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
-import { PRODUCTS_CATEGORIES } from "../data";
+import { CATEGORIES_DATA } from "../data";
 import { Network, Search, ExternalLink } from "lucide-react";
 import { SEO } from "../components/SEO";
 
@@ -12,9 +12,9 @@ export function SitemapViewer() {
     { 
       name: "Products", 
       path: "/products",
-      children: PRODUCTS_CATEGORIES.map(c => ({
-        name: c,
-        path: `/products/${c.toLowerCase().replace(/\s+/g, "-")}`
+      children: CATEGORIES_DATA.map(c => ({
+        name: c.name,
+        path: `/products?category=${c.id}`
       }))
     },
     { name: "VADO Collection", path: "/vado-collection" },

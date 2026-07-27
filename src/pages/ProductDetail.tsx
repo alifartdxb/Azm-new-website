@@ -1,326 +1,271 @@
-import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
-import { MOCK_PRODUCTS_DATABASE } from "../data";
-import { 
-  ChevronRight, FileText, Download, MessageCircle, Mail, MapPin, 
-  ZoomIn, Check, Settings, FileDown, ArrowRight, X 
-} from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { SEO } from "../components/SEO";
-import { OptimizedImage } from "../components/OptimizedImage";
+import React, { useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { SEO } from '../components/SEO';
+import { OptimizedImage } from '../components/OptimizedImage';
+import { getProductBySlug, getBrandBySlug, getCategoryById, PRODUCTS_DATA } from '../data';
+import { ArrowLeft, ChevronRight, FileText, MessageSquare, Mail, Download, Ruler, Settings, CheckCircle2, Shield, Share2 } from 'lucide-react';
+import { motion } from 'motion/react';
 
 export function ProductDetail() {
-  const { sku } = useParams<{ sku: string }>();
-  // Use exact match or fallback to first product for mockup purposes
-  const product = MOCK_PRODUCTS_DATABASE.find(p => p.sku === sku) || MOCK_PRODUCTS_DATABASE[0];
+  const { brandSlug, categorySlug, productSlug, sku } = useParams<{ brandSlug?: string, categorySlug?: string, productSlug?: string, sku?: string }>();
+  const navigate = useNavigate();
   
-  const [activeImage, setActiveImage] = useState(product.images[0]);
-  const [selectedFinish, setSelectedFinish] = useState(product.finish[0]);
-  const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
+  // Try to find the product based on either slug or sku (for backward compatibility)
+  const product = productSlug 
+    ? getProductBySlug(productSlug) 
+    : (sku ? PRODUCTS_DATA.find(p => p.sku === sku) : undefined);
+    
+  const [activeImage, setActiveImage] = useState(0);
 
-  // Mocking multiple images for the gallery if only one exists in DB
-  const galleryImages = product.images.length > 1 
-    ? product.images 
-    : [
-        product.images[0], 
-        "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=1000&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?q=80&w=1000&auto=format&fit=crop"
-      ];
+  if (!product) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center pt-20">
+        <h1 className="text-3xl font-bold font-display text-brand-secondary mb-4">Product Not Found</h1>
+        <button onClick={() => navigate(-1)} className="text-brand-primary font-bold inline-flex items-center gap-2 hover:underline">
+          <ArrowLeft size={16} /> Go Back
+        </button>
+      </div>
+    );
+  }
 
-  if (!product) return <div className="p-24 text-center">Product not found</div>;
+  const brand = getBrandBySlug(product.brandId || brandSlug || '');
+  const category = getCategoryById(product.categoryId);
 
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": "https://www.azmgroup.ae"
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "Catalog",
-        "item": "https://www.azmgroup.ae/products"
-      },
-      {
-        "@type": "ListItem",
-        "position": 3,
-        "name": product.category,
-        "item": `https://www.azmgroup.ae/products/${product.category.toLowerCase().replace(/\s+/g, '-')}`
-      },
-      {
-        "@type": "ListItem",
-        "position": 4,
-        "name": product.name,
-        "item": `https://www.azmgroup.ae/products/${product.sku}`
+  const schemas = [
+    {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": product.name,
+      "image": product.images,
+      "description": product.description,
+      "sku": product.sku,
+      "brand": {
+        "@type": "Brand",
+        "name": brand?.name || "Unknown Brand"
       }
-    ]
-  };
-
-  const productSchema = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": product.name,
-    "image": product.images[0],
-    "description": product.description,
-    "sku": product.sku,
-    "brand": {
-      "@type": "Brand",
-      "name": product.brand
-    },
-    "category": product.category
-  };
+    }
+  ];
 
   return (
-    <div className="flex-grow flex flex-col bg-white font-sans text-brand-dark">
+    <div className="flex-grow flex flex-col bg-white">
       <SEO 
-        title={`${product.name} | ${product.category} | AZM Group`}
-        description={product.description}
-        image={product.images[0]}
-        type="product"
-        schemas={[breadcrumbSchema, productSchema]}
+        title={product.seoTitle}
+        description={product.seoDescription}
+        keywords={[product.name, product.sku, brand?.name || '', category?.name || '', "Dubai", "UAE"]}
+        schemas={schemas}
       />
-      {/* Breadcrumb Navigation */}
-      <div className="bg-stone-50 border-b border-stone-100 py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center text-xs font-semibold uppercase tracking-widest text-stone-500 overflow-x-auto whitespace-nowrap">
-          <Link to="/" className="hover:text-brand-primary transition-colors">Home</Link>
-          <ChevronRight size={14} className="mx-2 flex-shrink-0" />
-          <Link to="/products" className="hover:text-brand-primary transition-colors">Catalog</Link>
-          <ChevronRight size={14} className="mx-2 flex-shrink-0" />
-          <Link to={`/products/${product.category.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-brand-primary transition-colors">{product.category}</Link>
-          <ChevronRight size={14} className="mx-2 flex-shrink-0" />
-          <span className="text-brand-secondary">{product.sku}</span>
+
+      <div className="pt-24 pb-4 border-b border-stone-100 bg-stone-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex text-xs font-bold uppercase tracking-wider text-stone-500 overflow-x-auto whitespace-nowrap">
+            <Link to="/" className="hover:text-brand-primary transition-colors">Home</Link>
+            <ChevronRight size={14} className="mx-2" />
+            <Link to="/brands" className="hover:text-brand-primary transition-colors">Brands</Link>
+            {brand && (
+              <>
+                <ChevronRight size={14} className="mx-2" />
+                <Link to={`/brands/${brand.slug}`} className="hover:text-brand-primary transition-colors">{brand.name}</Link>
+              </>
+            )}
+            <ChevronRight size={14} className="mx-2" />
+            <span className="text-brand-secondary">{product.sku}</span>
+          </nav>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           
           {/* Image Gallery */}
-          <div className="flex flex-col gap-6">
-            <div 
-              className="relative aspect-square bg-stone-50 rounded-2xl overflow-hidden cursor-zoom-in border border-stone-100 group"
-              onClick={() => setIsZoomModalOpen(true)}
-            >
+          <div className="space-y-4">
+            <div className="aspect-square bg-stone-50 rounded-2xl border border-stone-200 overflow-hidden relative">
               <OptimizedImage 
-                src={activeImage} 
-                alt={product.name} 
-                className="mix-blend-multiply group-hover:scale-105 transition-transform duration-700"
+                src={product.images[activeImage]} 
+                alt={product.name}
+                className="w-full h-full object-contain mix-blend-multiply p-8"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 flex items-center justify-center">
-                <div className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm shadow-xl flex items-center justify-center text-brand-secondary opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                  <ZoomIn size={20} />
+              {brand && (
+                <div className="absolute top-6 left-6">
+                  <OptimizedImage src={brand.logo} alt={brand.name} className="h-8 w-auto mix-blend-multiply opacity-50" fallbackSrc={`https://via.placeholder.com/150x50?text=${brand.name}`} />
                 </div>
-              </div>
-              <div className="absolute top-4 left-4">
-                 <span className="bg-white/90 backdrop-blur text-brand-secondary text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded shadow-sm">
-                   {product.brand}
-                 </span>
-              </div>
+              )}
             </div>
             
-            {/* Thumbnails */}
-            <div className="grid grid-cols-4 gap-4">
-              {galleryImages.map((img, idx) => (
-                <button 
-                  key={idx}
-                  onClick={() => setActiveImage(img)}
-                  className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${activeImage === img ? 'border-brand-primary shadow-lg' : 'border-transparent hover:border-stone-300'}`}
-                >
-                  <OptimizedImage src={img} alt={`Thumbnail ${idx + 1}`} className="mix-blend-multiply" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Product Details */}
-          <div className="flex flex-col">
-            <div className="mb-8">
-              <p className="text-brand-primary font-semibold text-sm tracking-wider uppercase mb-2 flex items-center gap-2">
-                {product.series} Series
-              </p>
-              <h1 className="text-3xl lg:text-4xl font-bold text-brand-secondary mb-4 font-display leading-tight">
-                {product.name}
-              </h1>
-              <div className="flex flex-wrap items-center gap-4 text-sm font-mono text-stone-500 mb-6 pb-6 border-b border-stone-100">
-                <span className="bg-stone-100 px-3 py-1 rounded-sm">SKU: {product.sku}</span>
-                <span>Category: {product.category}</span>
-              </div>
-              <p className="text-stone-600 text-lg leading-relaxed mb-8">
-                {product.description}
-              </p>
-            </div>
-
-            {/* Finishes */}
-            <div className="mb-10">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-brand-secondary mb-4">Select Finish</h3>
-              <div className="flex flex-wrap gap-3">
-                {product.finish.map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setSelectedFinish(f)}
-                    className={`px-5 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border ${
-                      selectedFinish === f 
-                        ? 'bg-brand-secondary text-white border-brand-secondary shadow-md' 
-                        : 'bg-white text-stone-600 border-stone-200 hover:border-brand-primary'
-                    }`}
+            {product.images.length > 1 && (
+              <div className="grid grid-cols-4 gap-4">
+                {product.images.map((img, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={() => setActiveImage(idx)}
+                    className={`aspect-square bg-stone-50 rounded-xl border-2 overflow-hidden ${activeImage === idx ? 'border-brand-primary' : 'border-transparent hover:border-stone-300'} transition-all`}
                   >
-                    {selectedFinish === f && <Check size={16} />}
-                    {f}
+                    <OptimizedImage src={img} alt={`${product.name} thumbnail ${idx + 1}`} className="w-full h-full object-cover mix-blend-multiply" />
                   </button>
                 ))}
               </div>
+            )}
+          </div>
+
+          {/* Product Info */}
+          <div>
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <Link to={`/brands/${brand?.slug}`} className="text-sm font-bold uppercase tracking-widest text-brand-primary hover:underline mb-2 block">
+                  {brand?.name}
+                </Link>
+                <h1 className="text-3xl md:text-5xl font-bold font-display text-brand-secondary mb-2">{product.name}</h1>
+                <div className="flex items-center gap-3 text-sm font-mono text-stone-500 bg-stone-100 px-3 py-1 rounded inline-block">
+                  SKU: {product.sku}
+                </div>
+              </div>
+              <button className="w-10 h-10 rounded-full bg-stone-50 border border-stone-200 flex items-center justify-center text-stone-400 hover:text-brand-primary hover:border-brand-primary transition-colors tooltip" aria-label="Share">
+                <Share2 size={18} />
+              </button>
             </div>
 
-            {/* B2B Action Buttons */}
-            <div className="flex flex-col gap-3 mb-12">
-              <div className="flex gap-3">
-                <a 
-                  href={`https://wa.me/971501234567?text=Hi, I am inquiring about product SKU: ${product.sku} - ${product.name}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-1 bg-green-500 hover:bg-green-600 text-white py-4 rounded-xl font-semibold uppercase tracking-wider text-sm flex items-center justify-center gap-2 transition-colors shadow-lg shadow-green-500/20"
-                >
-                  <MessageCircle size={18} /> WhatsApp Inquiry
+            <p className="text-lg text-stone-600 leading-relaxed mb-8">
+              {product.description}
+            </p>
+
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="bg-stone-50 p-4 rounded-xl border border-stone-100">
+                <span className="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1">Collection</span>
+                <span className="font-bold text-brand-secondary">{product.collection}</span>
+              </div>
+              <div className="bg-stone-50 p-4 rounded-xl border border-stone-100">
+                <span className="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1">Status</span>
+                <span className={`font-bold ${product.status === 'Available' ? 'text-green-600' : 'text-orange-500'}`}>{product.status}</span>
+              </div>
+            </div>
+
+            {/* Finishes */}
+            {product.finish && product.finish.length > 0 && (
+              <div className="mb-10">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-stone-900 mb-4">Available Finishes</h3>
+                <div className="flex flex-wrap gap-3">
+                  {product.finish.map(f => (
+                    <div key={f} className="px-4 py-2 bg-white border border-stone-200 rounded-lg text-sm font-medium text-stone-700 shadow-sm">
+                      {f}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col gap-4 mb-12">
+              <Link to={`/contact?tab=quote&sku=${product.sku}`} className="w-full flex items-center justify-center gap-2 bg-brand-primary text-white py-4 rounded-xl font-bold uppercase tracking-wider hover:bg-brand-secondary transition-colors shadow-lg hover:shadow-xl">
+                Request a Quote <FileText size={18} />
+              </Link>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <a href={`https://wa.me/971501234567?text=I am interested in ${product.name} (${product.sku})`} target="_blank" rel="noreferrer" className="w-full flex items-center justify-center gap-2 bg-green-500 text-white py-4 rounded-xl font-bold uppercase tracking-wider hover:bg-green-600 transition-colors shadow-lg">
+                  WhatsApp Inquiry <MessageSquare size={18} />
                 </a>
-                <a 
-                  href={`mailto:sales@azmgroup.ae?subject=Inquiry: ${product.name} (${product.sku})`}
-                  className="flex-1 bg-brand-secondary hover:bg-brand-primary text-white py-4 rounded-xl font-semibold uppercase tracking-wider text-sm flex items-center justify-center gap-2 transition-colors shadow-lg shadow-brand-secondary/20"
-                >
-                  <Mail size={18} /> Email Quote
+                <a href={`mailto:sales@azmgroup.ae?subject=Inquiry about ${product.sku}`} className="w-full flex items-center justify-center gap-2 bg-stone-100 text-stone-800 border border-stone-200 py-4 rounded-xl font-bold uppercase tracking-wider hover:bg-stone-200 transition-colors">
+                  Email Inquiry <Mail size={18} />
                 </a>
               </div>
-              <Link 
-                to="/contact"
-                className="w-full bg-white border border-stone-200 hover:border-brand-primary text-brand-secondary py-4 rounded-xl font-semibold uppercase tracking-wider text-sm flex items-center justify-center gap-2 transition-colors"
-              >
-                <MapPin size={18} /> Book Showroom Visit
-              </Link>
-              <p className="text-center text-xs text-stone-400 mt-2">Trade pricing available upon request. Available in UAE stock.</p>
             </div>
 
-            {/* Extra Info Accordions or Lists */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-8 border-t border-stone-100">
-               <div>
-                 <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-brand-secondary mb-4">
-                   <Settings size={16} className="text-brand-primary" /> Key Features
-                 </h3>
-                 <ul className="space-y-2">
-                   {product.features.map((feature, i) => (
-                     <li key={i} className="text-stone-600 text-sm flex items-start gap-2">
-                       <span className="text-brand-primary mt-1">•</span> {feature}
-                     </li>
-                   ))}
-                   <li className="text-stone-600 text-sm flex items-start gap-2">
-                      <span className="text-brand-primary mt-1">•</span> Dimensions: {product.dimensions}
-                   </li>
-                 </ul>
-               </div>
+            {/* Downloads */}
+            {product.documents && product.documents.length > 0 && (
+              <div className="bg-stone-50 rounded-2xl p-6 border border-stone-100">
+                <h3 className="font-bold text-lg text-brand-secondary mb-4 flex items-center gap-2"><Download size={20} className="text-brand-primary" /> Technical Documents</h3>
+                <div className="space-y-3">
+                  {product.documents.map(doc => (
+                    <a key={doc.id} href={doc.url} className="flex items-center justify-between p-3 bg-white border border-stone-200 rounded-xl hover:border-brand-primary group transition-colors">
+                      <div className="flex items-center gap-3">
+                        <FileText size={18} className="text-stone-400 group-hover:text-brand-primary transition-colors" />
+                        <span className="font-medium text-sm text-stone-700">{doc.title}</span>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand-primary bg-brand-primary/10 px-2 py-1 rounded">Download PDF</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+          </div>
+        </div>
+      </div>
 
-               <div>
-                 <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-brand-secondary mb-4">
-                   <FileDown size={16} className="text-brand-primary" /> Downloads
-                 </h3>
-                 <div className="flex flex-col gap-2">
-                   {product.downloads.technicalDatasheet && (
-                     <a href={product.downloads.technicalDatasheet} className="text-sm text-stone-600 hover:text-brand-primary flex items-center gap-2 group transition-colors">
-                       <FileText size={16} className="text-stone-400 group-hover:text-brand-primary" /> Technical Datasheet
-                     </a>
-                   )}
-                   {product.downloads.installationGuide && (
-                     <a href={product.downloads.installationGuide} className="text-sm text-stone-600 hover:text-brand-primary flex items-center gap-2 group transition-colors">
-                       <FileText size={16} className="text-stone-400 group-hover:text-brand-primary" /> Installation Guide
-                     </a>
-                   )}
-                   {product.downloads.brochurePdf && (
-                     <a href={product.downloads.brochurePdf} className="text-sm text-stone-600 hover:text-brand-primary flex items-center gap-2 group transition-colors">
-                       <FileText size={16} className="text-stone-400 group-hover:text-brand-primary" /> Collection Brochure
-                     </a>
-                   )}
-                 </div>
-                 
-                 <div className="mt-6 pt-6 border-t border-stone-100">
-                    <p className="text-sm text-stone-600 flex items-center gap-2">
-                      <span className="font-bold text-brand-secondary">Warranty:</span> {product.warrantyInformation}
-                    </p>
-                 </div>
-               </div>
+      {/* Tabs / Detailed Specs */}
+      <div className="bg-stone-50 border-y border-stone-200 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+                  <CheckCircle2 size={20} />
+                </div>
+                <h3 className="text-xl font-bold font-display text-brand-secondary">Key Features</h3>
+              </div>
+              <ul className="space-y-3">
+                {product.features?.map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-primary mt-2 flex-shrink-0" />
+                    <span className="text-stone-600 leading-relaxed text-sm">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+                  <Settings size={20} />
+                </div>
+                <h3 className="text-xl font-bold font-display text-brand-secondary">Specifications</h3>
+              </div>
+              <dl className="space-y-4">
+                <div className="grid grid-cols-3 gap-4 border-b border-stone-200 pb-2">
+                  <dt className="text-xs font-bold uppercase tracking-wider text-stone-500">Material</dt>
+                  <dd className="col-span-2 text-sm font-medium text-stone-800">{product.material}</dd>
+                </div>
+                <div className="grid grid-cols-3 gap-4 border-b border-stone-200 pb-2">
+                  <dt className="text-xs font-bold uppercase tracking-wider text-stone-500">Installation</dt>
+                  <dd className="col-span-2 text-sm font-medium text-stone-800">{product.installationType?.join(', ')}</dd>
+                </div>
+                <div className="grid grid-cols-3 gap-4 border-b border-stone-200 pb-2">
+                  <dt className="text-xs font-bold uppercase tracking-wider text-stone-500">Application</dt>
+                  <dd className="col-span-2 text-sm font-medium text-stone-800">{product.application?.join(', ')}</dd>
+                </div>
+                <div className="grid grid-cols-3 gap-4 pb-2">
+                  <dt className="text-xs font-bold uppercase tracking-wider text-stone-500">Tech Specs</dt>
+                  <dd className="col-span-2 text-sm font-medium text-stone-800">{product.technicalSpecifications}</dd>
+                </div>
+              </dl>
+            </div>
+            
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+                  <Ruler size={20} />
+                </div>
+                <h3 className="text-xl font-bold font-display text-brand-secondary">Dimensions & Setup</h3>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm mb-6">
+                <p className="text-sm font-bold text-stone-900 mb-2">Overall Dimensions</p>
+                <p className="text-stone-600 font-mono text-sm">{product.dimensions}</p>
+                <div className="my-4 border-t border-stone-100" />
+                <p className="text-sm font-bold text-stone-900 mb-2">Weight</p>
+                <p className="text-stone-600 font-mono text-sm">{product.weight}</p>
+              </div>
+              
+              <div className="flex items-center gap-3 p-4 bg-brand-secondary text-white rounded-xl">
+                <Shield size={24} className="text-brand-primary flex-shrink-0" />
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-stone-400">Warranty</p>
+                  <p className="font-bold">{product.warranty}</p>
+                </div>
+              </div>
             </div>
 
           </div>
         </div>
       </div>
-
-      {/* Related Products */}
-      <section className="bg-stone-50 py-24 border-t border-stone-100 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-           <div className="flex justify-between items-end mb-12">
-             <div>
-               <h2 className="text-3xl font-bold tracking-tight text-brand-secondary mb-2 font-display">Complete The Look</h2>
-               <p className="text-stone-500">Related products from the {product.series} collection.</p>
-             </div>
-             <Link to="/products" className="hidden sm:flex text-sm font-semibold uppercase tracking-wider text-brand-primary items-center gap-2 group">
-               View Collection <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-             </Link>
-           </div>
-           
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-             {MOCK_PRODUCTS_DATABASE.slice(0, 4).map((related) => (
-                <div key={related.sku} className="group bg-white rounded-2xl border border-stone-100 overflow-hidden hover:shadow-xl transition-all duration-300">
-                  <div className="aspect-square bg-stone-50 relative overflow-hidden p-6 flex items-center justify-center">
-                    <OptimizedImage src={related.images[0]} alt={related.name} className="mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
-                  </div>
-                  <div className="p-6">
-                    <p className="text-brand-primary text-[10px] uppercase font-bold tracking-wider mb-2">{related.brand}</p>
-                    <Link to={`/products/${related.sku}`} className="block">
-                      <h4 className="text-base font-bold text-brand-secondary hover:text-brand-primary transition-colors line-clamp-2 mb-2">
-                        {related.name}
-                      </h4>
-                    </Link>
-                    <p className="text-xs font-mono text-stone-400">{related.sku}</p>
-                  </div>
-                </div>
-             ))}
-           </div>
-        </div>
-      </section>
-
-      {/* Zoom Modal */}
-      <AnimatePresence>
-        {isZoomModalOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-white/95 backdrop-blur-md flex items-center justify-center p-4 sm:p-12 overflow-hidden"
-          >
-            <button 
-              onClick={() => setIsZoomModalOpen(false)}
-              className="absolute top-6 right-6 lg:top-10 lg:right-10 w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 hover:bg-brand-primary hover:text-white transition-colors z-[101]"
-            >
-              <X size={24} />
-            </button>
-            <motion.div 
-               initial={{ scale: 0.9, opacity: 0 }}
-               animate={{ scale: 1, opacity: 1 }}
-               exit={{ scale: 0.9, opacity: 0 }}
-               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-               className="relative max-w-5xl w-full max-h-full flex items-center justify-center"
-            >
-              <img 
-                src={activeImage} 
-                alt={product.name} 
-                className="max-w-full max-h-[85vh] object-contain drop-shadow-2xl" 
-                onClick={(e) => e.stopPropagation()}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+      
     </div>
   );
 }
