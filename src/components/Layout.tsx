@@ -27,7 +27,6 @@ export function Layout() {
 
   const navigation = [
     { name: "About Us", path: "/about" },
-    { name: "Catalogues", path: "/catalogues" },
     { 
       name: "Products", 
       path: "/products",
@@ -43,6 +42,7 @@ export function Layout() {
       path: "/projects",
       megaMenu: "projects"
     },
+    { name: "Catalogues", path: "/catalogues" },
     { name: "News", path: "/blog" },
     { name: "Showrooms", path: "/contact" },
   ];

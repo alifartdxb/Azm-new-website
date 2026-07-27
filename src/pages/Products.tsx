@@ -16,27 +16,35 @@ export function Products() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(urlCategory ? [urlCategory] : []);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedFinishes, setSelectedFinishes] = useState<string[]>([]);
-  const [allProducts, setAllProducts] = useState<any[]>(PRODUCTS_DATA);
-  const [isLoading, setIsLoading] = useState(true);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    async function loadProducts() {
       try {
-        const dbProducts = await getCollection('products');
-        if (dbProducts && dbProducts.length > 0) {
-          setAllProducts(dbProducts.filter((p: any) => p.status === 'Active' || p.status === 'Published'));
+        setLoading(true);
+        const data = await getCollection('products');
+        
+        // Filter out drafts on public site
+        const activeProducts = data.filter(p => p.status !== 'Draft');
+        
+        if (activeProducts.length > 0) {
+          setProducts(activeProducts);
+        } else {
+          setProducts(PRODUCTS_DATA); // Fallback
         }
-      } catch (err) {
-        console.error("Failed to load products", err);
+      } catch (e) {
+        console.error("Failed to load products from DB", e);
+        setProducts(PRODUCTS_DATA);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
-    };
-    fetchProducts();
+    }
+    loadProducts();
   }, []);
 
   // Extract unique filter options
-  const allFinishes = Array.from(new Set(allProducts.flatMap(p => p.finish || []))) as string[];
+  const allFinishes = Array.from(new Set(products.flatMap(p => p.finish || [])));
 
   const toggleFilter = (list: string[], setList: (l: string[]) => void, value: string) => {
     if (list.includes(value)) {
@@ -54,31 +62,40 @@ export function Products() {
   };
 
   const filteredProducts = useMemo(() => {
-    let result = allProducts;
+    let result = products;
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(p => 
-        p.name.toLowerCase().includes(q) || 
-        p.sku.toLowerCase().includes(q) ||
-        p.series.toLowerCase().includes(q)
+        (p.name && p.name.toLowerCase().includes(q)) || 
+        (p.sku && p.sku.toLowerCase().includes(q)) ||
+        (p.series && p.series.toLowerCase().includes(q))
       );
     }
 
     if (selectedCategories.length > 0) {
-      result = result.filter(p => selectedCategories.includes(p.categoryId));
+      result = result.filter(p => 
+        selectedCategories.includes(p.categoryId) || 
+        selectedCategories.includes(p.category) // Support new db schema
+      );
     }
 
     if (selectedBrands.length > 0) {
-      result = result.filter(p => selectedBrands.includes(p.brandId));
+      result = result.filter(p => 
+        selectedBrands.includes(p.brandId) ||
+        selectedBrands.includes(p.brand) // Support new db schema
+      );
     }
 
     if (selectedFinishes.length > 0) {
-      result = result.filter(p => p.finish && p.finish.some(f => selectedFinishes.includes(f)));
+      result = result.filter(p => p.finish && (
+        (Array.isArray(p.finish) && p.finish.some(f => selectedFinishes.includes(f))) ||
+        (typeof p.finish === 'string' && selectedFinishes.includes(p.finish))
+      ));
     }
 
     return result;
-  }, [searchQuery, selectedCategories, selectedBrands, selectedFinishes]);
+  }, [searchQuery, selectedCategories, selectedBrands, selectedFinishes, products]);
 
   return (
     <div className="flex-grow flex flex-col bg-stone-50">
@@ -177,24 +194,24 @@ export function Products() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredProducts.map(product => {
-                const brand = BRANDS_DATA.find(b => b.id === product.brandId);
-                const category = CATEGORIES_DATA.find(c => c.id === product.categoryId);
+                const brand = BRANDS_DATA.find(b => b.id === product.brandId || b.name === product.brand);
+                const category = CATEGORIES_DATA.find(c => c.id === product.categoryId || c.name === product.category);
                 
                 return (
                   <Link 
-                    key={product.id} 
-                    to={`/products/${brand?.slug}/${category?.slug}/${product.slug}`}
+                    key={product.id || product.sku} 
+                    to={`/products/${brand?.slug || product.brand?.toLowerCase() || 'brand'}/${category?.slug || product.category?.toLowerCase() || 'category'}/${product.slug || product.urlSlug || product.sku}`}
                     className="group bg-white rounded-2xl border border-stone-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col"
                   >
                     <div className="aspect-square relative overflow-hidden bg-stone-50 p-6 flex items-center justify-center">
                       <OptimizedImage 
-                        src={product.thumbnail || product.images[0]} 
+                        src={product.mainImage || product.thumbnail || product.images?.[0]} 
                         alt={product.name}
                         className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-4 left-4">
                         <span className="bg-white/90 backdrop-blur-sm text-[10px] font-bold uppercase tracking-wider text-brand-secondary px-2 py-1 rounded shadow-sm">
-                          {brand?.name}
+                          {brand?.name || product.brand}
                         </span>
                       </div>
                     </div>
@@ -205,7 +222,7 @@ export function Products() {
                       <p className="font-mono text-xs text-stone-400 mb-4">{product.sku}</p>
                       
                       <div className="mt-auto pt-4 border-t border-stone-100 flex items-center justify-between">
-                        <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">{category?.name}</span>
+                        <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">{category?.name || product.category}</span>
                         <ArrowRight size={16} className="text-brand-primary opacity-0 group-hover:opacity-100 transform -translate-x-2 group-hover:translate-x-0 transition-all" />
                       </div>
                     </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { SEO } from '../components/SEO';
 import { OptimizedImage } from '../components/OptimizedImage';
-import { getProductBySlug, getBrandBySlug, getCategoryById, PRODUCTS_DATA } from '../data';
+import { getProductBySlug, getBrandBySlug, getCategoryById, PRODUCTS_DATA, BRANDS_DATA, CATEGORIES_DATA } from '../data';
 import { ArrowLeft, ChevronRight, FileText, MessageSquare, Mail, Download, Ruler, Settings, CheckCircle2, Shield, Share2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getCollection } from '../services/db';
@@ -14,61 +14,85 @@ export function ProductDetail() {
   const navigate = useNavigate();
   
   const [product, setProduct] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
-    const loadProduct = async () => {
+    async function fetchProduct() {
       try {
-        const dbProducts = await getCollection('products');
+        setLoading(true);
+        const products = await getCollection('products');
         
+        // Find product by slug or sku
         let foundProduct = null;
         if (productSlug) {
-           foundProduct = dbProducts.find((p: any) => p.slug === productSlug);
-        } else if (sku) {
-           foundProduct = dbProducts.find((p: any) => p.sku === sku);
+          foundProduct = products.find(p => p.urlSlug === productSlug || p.slug === productSlug);
+        }
+        if (!foundProduct && sku) {
+          foundProduct = products.find(p => p.sku === sku);
         }
 
-        if (foundProduct) {
+        if (foundProduct && foundProduct.status !== 'Draft') {
           setProduct(foundProduct);
         } else {
           // Fallback to static data
-          const staticProduct = productSlug ? getProductBySlug(productSlug) : (sku ? PRODUCTS_DATA.find(p => p.sku === sku) : undefined);
-          setProduct(staticProduct);
+          const fallbackProduct = productSlug 
+            ? getProductBySlug(productSlug) 
+            : (sku ? PRODUCTS_DATA.find(p => p.sku === sku) : undefined);
+          setProduct(fallbackProduct);
         }
       } catch (e) {
-        console.error(e);
-        const staticProduct = productSlug ? getProductBySlug(productSlug) : (sku ? PRODUCTS_DATA.find(p => p.sku === sku) : undefined);
-        setProduct(staticProduct);
+        console.error("Failed to fetch product", e);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
-    };
-    loadProduct();
+    }
+    fetchProduct();
   }, [productSlug, sku]);
 
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading product...</div>;
+  if (loading) {
+    return (
+      <div className="flex-grow flex items-center justify-center min-h-[50vh]">
+        <div className="w-8 h-8 border-4 border-stone-200 border-t-brand-primary rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   if (!product) {
     return <NotFoundPage />;
   }
 
-  const brand = getBrandBySlug(product.brandId || brandSlug || '');
-  const category = getCategoryById(product.categoryId);
+  const brand = BRANDS_DATA.find(b => b.id === product.brandId || b.name === product.brand) || getBrandBySlug(product.brandId || brandSlug || '');
+  const category = CATEGORIES_DATA.find(c => c.id === product.categoryId || c.name === product.category) || getCategoryById(product.categoryId);
+
+  // Safely extract images
+  const images = [];
+  if (product.mainImage) images.push(product.mainImage);
+  if (product.images && Array.isArray(product.images)) {
+    product.images.forEach((img: string) => {
+      if (!images.includes(img)) images.push(img);
+    });
+  }
+  if (product.galleryImages && Array.isArray(product.galleryImages)) {
+    product.galleryImages.forEach((img: string) => {
+      if (!images.includes(img)) images.push(img);
+    });
+  }
+  if (images.length === 0) {
+    images.push('https://placehold.co/800x800?text=No+Image');
+  }
 
   const schemas = [
     {
       "@context": "https://schema.org/",
       "@type": "Product",
       "name": product.name,
-      "image": product.images,
-      "description": product.description,
+      "image": images,
+      "description": product.fullDescription || product.description,
       "sku": product.sku,
       "brand": {
         "@type": "Brand",
-        "name": brand?.name || "Unknown Brand"
+        "name": brand?.name || product.brand || "Unknown Brand"
       }
     }
   ];
@@ -76,8 +100,8 @@ export function ProductDetail() {
   return (
     <div className="flex-grow flex flex-col bg-white">
       <SEO 
-        title={product.seoTitle}
-        description={product.seoDescription}
+        title={product.seoTitle || product.name}
+        description={product.metaDescription || product.shortDescription || product.seoDescription}
         keywords={[product.name, product.sku, brand?.name || '', category?.name || '', "Dubai", "UAE"]}
         schemas={schemas}
       />
@@ -91,7 +115,7 @@ export function ProductDetail() {
             {brand && (
               <>
                 <ChevronRight size={14} className="mx-2" />
-                <Link to={`/brands/${brand.slug}`} className="hover:text-brand-primary transition-colors">{brand.name}</Link>
+                <Link to={`/brands/${brand.slug || brand.name.toLowerCase()}`} className="hover:text-brand-primary transition-colors">{brand.name}</Link>
               </>
             )}
             <ChevronRight size={14} className="mx-2" />
@@ -107,20 +131,20 @@ export function ProductDetail() {
           <div className="space-y-4">
             <div className="aspect-square bg-stone-50 rounded-2xl border border-stone-200 overflow-hidden relative">
               <OptimizedImage 
-                src={product.images[activeImage]} 
+                src={images[activeImage]} 
                 alt={product.name}
                 className="w-full h-full object-contain mix-blend-multiply p-8"
               />
-              {brand && (
+              {brand && brand.logo && (
                 <div className="absolute top-6 left-6">
                   <OptimizedImage src={brand.logo} alt={brand.name} className="h-8 w-auto mix-blend-multiply opacity-50" fallbackSrc={`https://via.placeholder.com/150x50?text=${brand.name}`} />
                 </div>
               )}
             </div>
             
-            {product.images.length > 1 && (
+            {images.length > 1 && (
               <div className="grid grid-cols-4 gap-4">
-                {product.images.map((img, idx) => (
+                {images.map((img, idx) => (
                   <button 
                     key={idx}
                     onClick={() => setActiveImage(idx)}
@@ -137,8 +161,8 @@ export function ProductDetail() {
           <div>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <Link to={`/brands/${brand?.slug}`} className="text-sm font-bold uppercase tracking-widest text-brand-primary hover:underline mb-2 block">
-                  {brand?.name}
+                <Link to={`/brands/${brand?.slug || (brand?.name || product.brand || '').toLowerCase()}`} className="text-sm font-bold uppercase tracking-widest text-brand-primary hover:underline mb-2 block">
+                  {brand?.name || product.brand}
                 </Link>
                 <h1 className="text-3xl md:text-5xl font-bold font-display text-brand-secondary mb-2">{product.name}</h1>
                 <div className="flex items-center gap-3 text-sm font-mono text-stone-500 bg-stone-100 px-3 py-1 rounded inline-block">
@@ -151,30 +175,34 @@ export function ProductDetail() {
             </div>
 
             <p className="text-lg text-stone-600 leading-relaxed mb-8">
-              {product.description}
+              {product.fullDescription || product.shortDescription || product.description}
             </p>
 
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="bg-stone-50 p-4 rounded-xl border border-stone-100">
                 <span className="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1">Collection</span>
-                <span className="font-bold text-brand-secondary">{product.collection}</span>
+                <span className="font-bold text-brand-secondary">{product.collection || 'Standard'}</span>
               </div>
               <div className="bg-stone-50 p-4 rounded-xl border border-stone-100">
                 <span className="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1">Status</span>
-                <span className={`font-bold ${product.status === 'Available' ? 'text-green-600' : 'text-orange-500'}`}>{product.status}</span>
+                <span className={`font-bold ${product.status === 'Available' ? 'text-green-600' : 'text-orange-500'}`}>{product.status || 'Available'}</span>
               </div>
             </div>
 
             {/* Finishes */}
-            {product.finish && product.finish.length > 0 && (
+            {product.finish && (
               <div className="mb-10">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-stone-900 mb-4">Available Finishes</h3>
                 <div className="flex flex-wrap gap-3">
-                  {product.finish.map(f => (
+                  {Array.isArray(product.finish) ? product.finish.map((f: string) => (
                     <div key={f} className="px-4 py-2 bg-white border border-stone-200 rounded-lg text-sm font-medium text-stone-700 shadow-sm">
                       {f}
                     </div>
-                  ))}
+                  )) : (
+                    <div className="px-4 py-2 bg-white border border-stone-200 rounded-lg text-sm font-medium text-stone-700 shadow-sm">
+                      {product.finish}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -195,12 +223,39 @@ export function ProductDetail() {
             </div>
 
             {/* Downloads */}
-            {product.documents && product.documents.length > 0 && (
+            {(product.cataloguePdf || product.technicalSheet || product.installationGuide || product.warrantyPdf || (product.documents && product.documents.length > 0)) && (
               <div className="bg-stone-50 rounded-2xl p-6 border border-stone-100">
                 <h3 className="font-bold text-lg text-brand-secondary mb-4 flex items-center gap-2"><Download size={20} className="text-brand-primary" /> Technical Documents</h3>
                 <div className="space-y-3">
-                  {product.documents.map(doc => (
-                    <a key={doc.id} href={doc.url} className="flex items-center justify-between p-3 bg-white border border-stone-200 rounded-xl hover:border-brand-primary group transition-colors">
+                  {product.cataloguePdf && (
+                    <a href={product.cataloguePdf} target="_blank" rel="noreferrer" className="flex items-center justify-between p-3 bg-white border border-stone-200 rounded-xl hover:border-brand-primary group transition-colors">
+                      <div className="flex items-center gap-3">
+                        <FileText size={18} className="text-stone-400 group-hover:text-brand-primary transition-colors" />
+                        <span className="font-medium text-sm text-stone-700">Catalogue</span>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand-primary bg-brand-primary/10 px-2 py-1 rounded">Download PDF</span>
+                    </a>
+                  )}
+                  {product.technicalSheet && (
+                    <a href={product.technicalSheet} target="_blank" rel="noreferrer" className="flex items-center justify-between p-3 bg-white border border-stone-200 rounded-xl hover:border-brand-primary group transition-colors">
+                      <div className="flex items-center gap-3">
+                        <FileText size={18} className="text-stone-400 group-hover:text-brand-primary transition-colors" />
+                        <span className="font-medium text-sm text-stone-700">Technical Sheet</span>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand-primary bg-brand-primary/10 px-2 py-1 rounded">Download PDF</span>
+                    </a>
+                  )}
+                  {product.installationGuide && (
+                    <a href={product.installationGuide} target="_blank" rel="noreferrer" className="flex items-center justify-between p-3 bg-white border border-stone-200 rounded-xl hover:border-brand-primary group transition-colors">
+                      <div className="flex items-center gap-3">
+                        <FileText size={18} className="text-stone-400 group-hover:text-brand-primary transition-colors" />
+                        <span className="font-medium text-sm text-stone-700">Installation Guide</span>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand-primary bg-brand-primary/10 px-2 py-1 rounded">Download PDF</span>
+                    </a>
+                  )}
+                  {product.documents?.map((doc: any) => (
+                    <a key={doc.id || doc.url} href={doc.url} target="_blank" rel="noreferrer" className="flex items-center justify-between p-3 bg-white border border-stone-200 rounded-xl hover:border-brand-primary group transition-colors">
                       <div className="flex items-center gap-3">
                         <FileText size={18} className="text-stone-400 group-hover:text-brand-primary transition-colors" />
                         <span className="font-medium text-sm text-stone-700">{doc.title}</span>
@@ -229,12 +284,23 @@ export function ProductDetail() {
                 <h3 className="text-xl font-bold font-display text-brand-secondary">Key Features</h3>
               </div>
               <ul className="space-y-3">
-                {product.features?.map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand-primary mt-2 flex-shrink-0" />
-                    <span className="text-stone-600 leading-relaxed text-sm">{feature}</span>
-                  </li>
-                ))}
+                {product.features ? (
+                  typeof product.features === 'string' 
+                    ? product.features.split('\n').map((feature: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <span className="w-1.5 h-1.5 rounded-full bg-brand-primary mt-2 flex-shrink-0" />
+                          <span className="text-stone-600 leading-relaxed text-sm">{feature.replace(/^- /, '')}</span>
+                        </li>
+                      ))
+                    : product.features.map((feature: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <span className="w-1.5 h-1.5 rounded-full bg-brand-primary mt-2 flex-shrink-0" />
+                          <span className="text-stone-600 leading-relaxed text-sm">{feature}</span>
+                        </li>
+                      ))
+                ) : (
+                  <li className="text-stone-500 text-sm">No specific features listed.</li>
+                )}
               </ul>
             </div>
             
@@ -248,19 +314,23 @@ export function ProductDetail() {
               <dl className="space-y-4">
                 <div className="grid grid-cols-3 gap-4 border-b border-stone-200 pb-2">
                   <dt className="text-xs font-bold uppercase tracking-wider text-stone-500">Material</dt>
-                  <dd className="col-span-2 text-sm font-medium text-stone-800">{product.material}</dd>
+                  <dd className="col-span-2 text-sm font-medium text-stone-800">{product.material || '-'}</dd>
                 </div>
-                <div className="grid grid-cols-3 gap-4 border-b border-stone-200 pb-2">
-                  <dt className="text-xs font-bold uppercase tracking-wider text-stone-500">Installation</dt>
-                  <dd className="col-span-2 text-sm font-medium text-stone-800">{product.installationType?.join(', ')}</dd>
-                </div>
-                <div className="grid grid-cols-3 gap-4 border-b border-stone-200 pb-2">
-                  <dt className="text-xs font-bold uppercase tracking-wider text-stone-500">Application</dt>
-                  <dd className="col-span-2 text-sm font-medium text-stone-800">{product.application?.join(', ')}</dd>
-                </div>
+                {product.installationType && (
+                  <div className="grid grid-cols-3 gap-4 border-b border-stone-200 pb-2">
+                    <dt className="text-xs font-bold uppercase tracking-wider text-stone-500">Installation</dt>
+                    <dd className="col-span-2 text-sm font-medium text-stone-800">{Array.isArray(product.installationType) ? product.installationType.join(', ') : product.installationType}</dd>
+                  </div>
+                )}
+                {product.application && (
+                  <div className="grid grid-cols-3 gap-4 border-b border-stone-200 pb-2">
+                    <dt className="text-xs font-bold uppercase tracking-wider text-stone-500">Application</dt>
+                    <dd className="col-span-2 text-sm font-medium text-stone-800">{Array.isArray(product.application) ? product.application.join(', ') : product.application}</dd>
+                  </div>
+                )}
                 <div className="grid grid-cols-3 gap-4 pb-2">
                   <dt className="text-xs font-bold uppercase tracking-wider text-stone-500">Tech Specs</dt>
-                  <dd className="col-span-2 text-sm font-medium text-stone-800">{product.technicalSpecifications}</dd>
+                  <dd className="col-span-2 text-sm font-medium text-stone-800">{product.technicalSpec || product.technicalSpecifications || '-'}</dd>
                 </div>
               </dl>
             </div>
@@ -274,17 +344,17 @@ export function ProductDetail() {
               </div>
               <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm mb-6">
                 <p className="text-sm font-bold text-stone-900 mb-2">Overall Dimensions</p>
-                <p className="text-stone-600 font-mono text-sm">{product.dimensions}</p>
+                <p className="text-stone-600 font-mono text-sm">{product.dimensions || '-'}</p>
                 <div className="my-4 border-t border-stone-100" />
                 <p className="text-sm font-bold text-stone-900 mb-2">Weight</p>
-                <p className="text-stone-600 font-mono text-sm">{product.weight}</p>
+                <p className="text-stone-600 font-mono text-sm">{product.weight || '-'}</p>
               </div>
               
               <div className="flex items-center gap-3 p-4 bg-brand-secondary text-white rounded-xl">
                 <Shield size={24} className="text-brand-primary flex-shrink-0" />
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider text-stone-400">Warranty</p>
-                  <p className="font-bold">{product.warranty}</p>
+                  <p className="font-bold">{product.warranty || '-'}</p>
                 </div>
               </div>
             </div>
