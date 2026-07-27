@@ -7,6 +7,8 @@ import { getBrandBySlug, getProductsByBrand, CATEGORIES_DATA } from '../data';
 import { ArrowRight, MessageSquare, FileText, Filter, X, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import { Product } from '../types';
 
+import { NotFoundPage } from './NotFoundPage';
+
 export function BrandDetail() {
   const { brandSlug } = useParams<{ brandSlug: string }>();
   const brand = getBrandBySlug(brandSlug || '');
@@ -18,7 +20,7 @@ export function BrandDetail() {
   const [searchQuery, setSearchQuery] = useState('');
 
   if (!brand) {
-    return <div className="min-h-screen flex items-center justify-center pt-20">Brand not found</div>;
+    return <NotFoundPage />;
   }
 
   // Derive categories for this brand based on its products

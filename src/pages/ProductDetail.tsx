@@ -6,6 +6,8 @@ import { getProductBySlug, getBrandBySlug, getCategoryById, PRODUCTS_DATA } from
 import { ArrowLeft, ChevronRight, FileText, MessageSquare, Mail, Download, Ruler, Settings, CheckCircle2, Shield, Share2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
+import { NotFoundPage } from './NotFoundPage';
+
 export function ProductDetail() {
   const { brandSlug, categorySlug, productSlug, sku } = useParams<{ brandSlug?: string, categorySlug?: string, productSlug?: string, sku?: string }>();
   const navigate = useNavigate();
@@ -18,14 +20,7 @@ export function ProductDetail() {
   const [activeImage, setActiveImage] = useState(0);
 
   if (!product) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center pt-20">
-        <h1 className="text-3xl font-bold font-display text-brand-secondary mb-4">Product Not Found</h1>
-        <button onClick={() => navigate(-1)} className="text-brand-primary font-bold inline-flex items-center gap-2 hover:underline">
-          <ArrowLeft size={16} /> Go Back
-        </button>
-      </div>
-    );
+    return <NotFoundPage />;
   }
 
   const brand = getBrandBySlug(product.brandId || brandSlug || '');

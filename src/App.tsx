@@ -18,6 +18,7 @@ const BlogDetail = lazy(() => import("./pages/BlogDetail").then(module => ({ def
 const Projects = lazy(() => import("./pages/Projects").then(module => ({ default: module.Projects })));
 const ProjectDetail = lazy(() => import("./pages/ProjectDetail").then(module => ({ default: module.ProjectDetail })));
 const GenericPage = lazy(() => import("./pages/GenericPage").then(module => ({ default: module.GenericPage })));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then(module => ({ default: module.NotFoundPage })));
 
 // Admin Pages
 const Login = lazy(() => import("./pages/admin/auth/Login").then(module => ({ default: module.Login })));
@@ -79,7 +80,7 @@ export default function App() {
               <Route path="projects" element={<Projects />} />
               <Route path="projects/:slug" element={<ProjectDetail />} />
               
-              <Route path="*" element={<GenericPage />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>
         </Suspense>
