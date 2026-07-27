@@ -44,7 +44,7 @@ export function AdminLayout() {
     { name: "Blogs", href: "/admin/blogs", icon: FileText },
     { name: "Media Library", href: "/admin/media", icon: ImageIcon },
     { name: "SEO Manager", href: "/admin/seo", icon: Search },
-    { name: "Catalogs", href: "/admin/catalogs", icon: BookOpen },
+    { name: "Catalogues", href: "/admin/catalogues", icon: BookOpen },
     { name: "Leads", href: "/admin/leads", icon: Users },
     { name: "Users & Roles", href: "/admin/users", icon: Settings },
   ];

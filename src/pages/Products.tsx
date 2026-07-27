@@ -23,7 +23,7 @@ export function Products() {
     async function loadProducts() {
       try {
         setLoading(true);
-        const data = await getCollection('products');
+        const data = await getCollection('products') as any[];
         
         // Filter out drafts on public site
         const activeProducts = data.filter(p => p.status !== 'Draft');
@@ -44,7 +44,7 @@ export function Products() {
   }, []);
 
   // Extract unique filter options
-  const allFinishes = Array.from(new Set(products.flatMap(p => p.finish || [])));
+  const allFinishes = Array.from(new Set(products.flatMap(p => p.finish || []))) as string[];
 
   const toggleFilter = (list: string[], setList: (l: string[]) => void, value: string) => {
     if (list.includes(value)) {

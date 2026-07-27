@@ -21,7 +21,7 @@ export function ProductDetail() {
     async function fetchProduct() {
       try {
         setLoading(true);
-        const products = await getCollection('products');
+        const products = await getCollection('products') as any[];
         
         // Find product by slug or sku
         let foundProduct = null;

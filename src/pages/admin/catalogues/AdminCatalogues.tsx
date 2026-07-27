@@ -1,35 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter, Upload, Download, MoreVertical, Edit, Trash2, Copy, AlertCircle } from 'lucide-react';
+import { Plus, Search, Filter, Upload, Download, Edit, Trash2, Copy, AlertCircle, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getCollection, deleteDocument, createDocument } from '../../../services/db';
-import { OptimizedImage } from '../../../components/OptimizedImage';
 
-export function ProductList() {
-  const [products, setProducts] = useState<any[]>([]);
+export function AdminCatalogues() {
+  const [catalogues, setCatalogues] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [selectedCatalogues, setSelectedCatalogues] = useState<string[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
   
   // Filters
   const [filterBrand, setFilterBrand] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadProducts();
+    loadCatalogues();
   }, []);
 
-  const loadProducts = async () => {
+  const loadCatalogues = async () => {
     try {
       setLoading(true);
-      const data = await getCollection('products');
-      setProducts(data);
+      const data = await getCollection('catalogues');
+      setCatalogues(data);
     } catch (e) {
-      console.error("Failed to load products", e);
+      console.error("Failed to load catalogues", e);
     } finally {
       setLoading(false);
     }
@@ -37,121 +35,90 @@ export function ProductList() {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteDocument('products', id);
-      setProducts(products.filter(p => p.id !== id));
+      await deleteDocument('catalogues', id);
+      setCatalogues(catalogues.filter(c => c.id !== id));
       setShowDeleteModal(null);
     } catch (e) {
-      console.error("Failed to delete product", e);
-      alert('Failed to delete product.');
+      console.error("Failed to delete catalogue", e);
+      alert('Failed to delete catalogue.');
     }
   };
 
-  const handleDuplicate = async (product: any) => {
+  const handleDuplicate = async (catalogue: any) => {
     try {
-      const { id, ...productData } = product;
+      const { id, ...catalogueData } = catalogue;
       const duplicatedData = {
-        ...productData,
-        name: `Copy - ${product.name}`,
-        sku: `${product.sku}-COPY`,
-        status: 'Draft',
+        ...catalogueData,
+        title: `Copy - ${catalogue.title}`,
         createdAt: new Date().toISOString()
       };
-      const newId = await createDocument('products', duplicatedData);
-      navigate(`/admin/products/edit/${newId}`);
+      const newId = await createDocument('catalogues', duplicatedData);
+      navigate(`/admin/catalogues/edit/${newId}`);
     } catch (e) {
-      console.error("Failed to duplicate product", e);
-      alert('Failed to duplicate product.');
+      console.error("Failed to duplicate catalogue", e);
+      alert('Failed to duplicate catalogue.');
     }
-  };
-
-  
-  const handleExport = () => {
-    if (products.length === 0) return alert('No products to export');
-    
-    // Simple CSV export
-    const headers = ['id', 'sku', 'name', 'brand', 'category', 'status', 'finish'];
-    const csvContent = [
-      headers.join(','),
-      ...products.map(p => headers.map(h => `"${(p[h] || '').toString().replace(/"/g, '""')}"`).join(','))
-    ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `products-export-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const handleBulkDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete ${selectedProducts.length} products?`)) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedCatalogues.length} catalogues?`)) return;
     try {
-      for (const id of selectedProducts) {
-        await deleteDocument('products', id);
+      for (const id of selectedCatalogues) {
+        await deleteDocument('catalogues', id);
       }
-      setProducts(products.filter(p => !selectedProducts.includes(p.id)));
-      setSelectedProducts([]);
+      setCatalogues(catalogues.filter(c => !selectedCatalogues.includes(c.id)));
+      setSelectedCatalogues([]);
     } catch (e) {
-      console.error("Failed to delete products", e);
-      alert('Failed to delete some products.');
+      console.error("Failed to delete catalogues", e);
+      alert('Failed to delete some catalogues.');
     }
   };
 
   const toggleSelectAll = () => {
-    if (selectedProducts.length === filteredProducts.length) {
-      setSelectedProducts([]);
+    if (selectedCatalogues.length === filteredCatalogues.length) {
+      setSelectedCatalogues([]);
     } else {
-      setSelectedProducts(filteredProducts.map(p => p.id));
+      setSelectedCatalogues(filteredCatalogues.map(c => c.id));
     }
   };
 
   const toggleSelect = (id: string) => {
-    if (selectedProducts.includes(id)) {
-      setSelectedProducts(selectedProducts.filter(pId => pId !== id));
+    if (selectedCatalogues.includes(id)) {
+      setSelectedCatalogues(selectedCatalogues.filter(cId => cId !== id));
     } else {
-      setSelectedProducts([...selectedProducts, id]);
+      setSelectedCatalogues([...selectedCatalogues, id]);
     }
   };
 
-  const filteredProducts = products.filter(p => {
+  const filteredCatalogues = catalogues.filter(c => {
     const matchesSearch = 
-      (p.name?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-      (p.sku?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-      (p.brand?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-      (p.category?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-      (p.collection?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-      (p.finish?.toLowerCase().includes(searchQuery.toLowerCase()) || '');
+      (c.title?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
+      (c.brand?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
+      (c.category?.toLowerCase().includes(searchQuery.toLowerCase()) || '');
       
-    const matchesBrand = filterBrand ? p.brand === filterBrand : true;
-    const matchesCategory = filterCategory ? p.category === filterCategory : true;
-    const matchesStatus = filterStatus ? p.status === filterStatus : true;
+    const matchesBrand = filterBrand ? c.brand === filterBrand : true;
+    const matchesCategory = filterCategory ? c.category === filterCategory : true;
 
-    return matchesSearch && matchesBrand && matchesCategory && matchesStatus;
+    return matchesSearch && matchesBrand && matchesCategory;
   });
 
-  const uniqueBrands = Array.from(new Set(products.map(p => p.brand).filter(Boolean)));
-  const uniqueCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
+  const uniqueBrands = Array.from(new Set(catalogues.map(c => c.brand).filter(Boolean)));
+  const uniqueCategories = Array.from(new Set(catalogues.map(c => c.category).filter(Boolean)));
   
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold font-display text-brand-secondary">Product Management</h1>
-          <p className="text-stone-500 text-sm">Manage all website products, categories, brands, images and technical documents.</p>
+          <h1 className="text-2xl font-bold font-display text-brand-secondary">Catalogue Management</h1>
+          <p className="text-stone-500 text-sm">Manage all downloadable PDF catalogues, brochures, and price lists.</p>
         </div>
         
         <div className="flex gap-2">
-          <Link to="/admin/products/import" className="px-4 py-2 border border-stone-200 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50 flex items-center gap-2 transition-colors">
-            <Upload size={16} /> Import
+          <Link to="/admin/catalogues/import" className="px-4 py-2 border border-stone-200 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50 flex items-center gap-2 transition-colors">
+            <Upload size={16} /> Bulk Upload
           </Link>
-          <button onClick={handleExport} className="px-4 py-2 border border-stone-200 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50 flex items-center gap-2 transition-colors">
-            <Download size={16} /> Export
-          </button>
-          <Link to="/admin/products/add" className="px-4 py-2 bg-brand-primary text-white rounded-lg text-sm font-medium hover:bg-brand-secondary flex items-center gap-2 transition-colors">
-            <Plus size={16} /> Add New Product
+          <Link to="/admin/catalogues/add" className="px-4 py-2 bg-brand-primary text-white rounded-lg text-sm font-medium hover:bg-brand-secondary flex items-center gap-2 transition-colors">
+            <Plus size={16} /> Add Catalogue
           </Link>
         </div>
       </div>
@@ -163,7 +130,7 @@ export function ProductList() {
             <Search className="absolute top-1/2 left-3 transform -translate-y-1/2 text-stone-400" size={18} />
             <input 
               type="text" 
-              placeholder="Search products..." 
+              placeholder="Search catalogues..." 
               className="w-full pl-10 pr-4 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-brand-primary bg-white"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -187,24 +154,14 @@ export function ProductList() {
               <option value="">All Categories</option>
               {uniqueCategories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
-            <select 
-              className="px-3 py-2 border border-stone-200 rounded-lg text-sm text-stone-600 bg-white"
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-            >
-              <option value="">All Statuses</option>
-              <option value="Available">Available</option>
-              <option value="Draft">Draft</option>
-              <option value="Out of Stock">Out of Stock</option>
-            </select>
           </div>
         </div>
 
         {/* Bulk Actions Bar */}
-        {selectedProducts.length > 0 && (
+        {selectedCatalogues.length > 0 && (
           <div className="bg-brand-primary/10 px-4 py-3 border-b border-stone-200 flex justify-between items-center">
             <span className="text-sm font-medium text-brand-secondary">
-              {selectedProducts.length} product(s) selected
+              {selectedCatalogues.length} catalogue(s) selected
             </span>
             <div className="flex gap-2">
               <button 
@@ -226,96 +183,104 @@ export function ProductList() {
                   <input 
                     type="checkbox" 
                     className="rounded border-stone-300 text-brand-primary focus:ring-brand-primary"
-                    checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
+                    checked={selectedCatalogues.length === filteredCatalogues.length && filteredCatalogues.length > 0}
                     onChange={toggleSelectAll}
                   />
                 </th>
-                <th className="px-6 py-4 font-bold">Product</th>
-                <th className="px-6 py-4 font-bold">SKU</th>
+                <th className="px-6 py-4 font-bold">Catalogue Details</th>
                 <th className="px-6 py-4 font-bold">Brand & Category</th>
-                <th className="px-6 py-4 font-bold">Finish</th>
-                <th className="px-6 py-4 font-bold">Status</th>
+                <th className="px-6 py-4 font-bold">Stats</th>
                 <th className="px-6 py-4 font-bold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-stone-500">
+                  <td colSpan={5} className="px-6 py-12 text-center text-stone-500">
                     <div className="w-8 h-8 border-4 border-stone-200 border-t-brand-primary rounded-full animate-spin mx-auto mb-4"></div>
-                    Loading products...
+                    Loading catalogues...
                   </td>
                 </tr>
-              ) : filteredProducts.length === 0 ? (
+              ) : filteredCatalogues.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-stone-500">
-                    No products found matching your criteria.
+                  <td colSpan={5} className="px-6 py-12 text-center text-stone-500">
+                    No catalogues found. <Link to="/admin/catalogues/add" className="text-brand-primary hover:underline">Add one now.</Link>
                   </td>
                 </tr>
-              ) : filteredProducts.map((product) => (
-                <tr key={product.id} className="hover:bg-stone-50 transition-colors group">
+              ) : filteredCatalogues.map((catalogue) => (
+                <tr key={catalogue.id} className="hover:bg-stone-50 transition-colors group">
                   <td className="px-6 py-4">
                     <input 
                       type="checkbox" 
                       className="rounded border-stone-300 text-brand-primary focus:ring-brand-primary"
-                      checked={selectedProducts.includes(product.id)}
-                      onChange={() => toggleSelect(product.id)}
+                      checked={selectedCatalogues.includes(catalogue.id)}
+                      onChange={() => toggleSelect(catalogue.id)}
                     />
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-stone-100 border border-stone-200 overflow-hidden flex-shrink-0">
-                        {product.mainImage ? (
-                          <OptimizedImage src={product.mainImage} alt={product.name} className="w-full h-full object-cover" />
+                      <div className="w-12 h-16 rounded border border-stone-200 overflow-hidden flex-shrink-0 bg-stone-100 flex items-center justify-center">
+                        {catalogue.thumbnail ? (
+                          <img src={catalogue.thumbnail} alt={catalogue.title} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-stone-400 bg-stone-100">
-                            No Img
-                          </div>
+                          <FileText className="text-stone-400" size={24} />
                         )}
                       </div>
                       <div>
-                        <p className="font-bold text-stone-800 text-sm">{product.name}</p>
-                        {product.collection && <p className="text-xs text-stone-500 mt-0.5">{product.collection}</p>}
+                        <p className="font-bold text-stone-800 text-sm mb-1">{catalogue.title}</p>
+                        <div className="flex items-center gap-2 text-xs text-stone-500">
+                          {catalogue.year && <span>{catalogue.year}</span>}
+                          {catalogue.language && (
+                            <>
+                              <span className="w-1 h-1 bg-stone-300 rounded-full" />
+                              <span>{catalogue.language}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <code className="text-xs font-mono bg-stone-100 px-2 py-1 rounded text-stone-700">{product.sku}</code>
+                    <div className="text-sm font-medium text-stone-800">{catalogue.brand || '-'}</div>
+                    <div className="text-xs text-stone-500 mt-0.5">
+                      {catalogue.category || '-'} {catalogue.productType && `• ${catalogue.productType}`}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-stone-800">{product.brand || '-'}</div>
-                    <div className="text-xs text-stone-500 mt-0.5">{product.category || '-'}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-stone-600">{product.finish || '-'}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-block px-2 py-1 text-[10px] font-bold uppercase rounded ${
-                      product.status === 'Available' ? 'bg-green-100 text-green-700' : 
-                      product.status === 'Draft' ? 'bg-stone-100 text-stone-700' :
-                      'bg-orange-100 text-orange-700'
-                    }`}>
-                      {product.status || 'Draft'}
-                    </span>
+                    <div className="flex flex-col gap-1 text-xs text-stone-600">
+                      {catalogue.pages && <span>{catalogue.pages} Pages</span>}
+                      {catalogue.fileSize && <span>{catalogue.fileSize}</span>}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {catalogue.pdfUrl && (
+                        <a 
+                          href={catalogue.pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 text-stone-400 hover:text-brand-primary hover:bg-stone-100 rounded transition-colors"
+                          title="View PDF"
+                        >
+                          <FileText size={16} />
+                        </a>
+                      )}
                       <button 
-                        onClick={() => handleDuplicate(product)}
+                        onClick={() => handleDuplicate(catalogue)}
                         className="p-1.5 text-stone-400 hover:text-brand-primary hover:bg-stone-100 rounded transition-colors"
                         title="Duplicate"
                       >
                         <Copy size={16} />
                       </button>
                       <Link 
-                        to={`/admin/products/edit/${product.id}`}
+                        to={`/admin/catalogues/edit/${catalogue.id}`}
                         className="p-1.5 text-stone-400 hover:text-brand-primary hover:bg-stone-100 rounded transition-colors"
                         title="Edit"
                       >
                         <Edit size={16} />
                       </Link>
                       <button 
-                        onClick={() => setShowDeleteModal(product.id)}
+                        onClick={() => setShowDeleteModal(catalogue.id)}
                         className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                         title="Delete"
                       >
@@ -350,7 +315,7 @@ export function ProductList() {
                 <h3 className="text-lg font-bold">Confirm Deletion</h3>
               </div>
               <p className="text-stone-600 mb-6">
-                Are you sure you want to delete this product? This action cannot be undone and will remove it from all website listings.
+                Are you sure you want to delete this catalogue? This action cannot be undone and will remove it from the public library.
               </p>
               <div className="flex justify-end gap-3">
                 <button 
@@ -363,7 +328,7 @@ export function ProductList() {
                   onClick={() => handleDelete(showDeleteModal)}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors"
                 >
-                  Delete Product
+                  Delete Catalogue
                 </button>
               </div>
             </motion.div>
