@@ -5,6 +5,8 @@ import { ArrowRight, Download, Droplet, CheckCircle, MapPin, Beaker, ShieldCheck
 import { useRef, useState, useEffect } from "react";
 import { SEO } from "../components/SEO";
 import { OptimizedImage } from "../components/OptimizedImage";
+import { PartnerMarquee } from "../components/PartnerMarquee";
+import { TestimonialCarousel } from "../components/TestimonialCarousel";
 
 const HERO_SLIDES = [
   {
@@ -29,7 +31,7 @@ const HERO_SLIDES = [
     description: "Transform your surfaces with our exclusive range of Italian Standards porcelain slabs, tiles, and bespoke sanitaryware.",
     image: "https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=2069&auto=format&fit=crop",
     primaryAction: { label: "Discover Ceramics", link: "/products" },
-    secondaryAction: { label: "View Projects", link: "/projects" }
+    secondaryAction: { label: "Contact Us", link: "/contact" }
   }
 ];
 
@@ -119,18 +121,7 @@ export function Home() {
       </section>
 
       {/* 2. Featured Brands */}
-      <section className="py-12 bg-white border-b border-stone-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-           <p className="text-center text-xs font-semibold uppercase tracking-widest text-stone-400 mb-8">Exclusive Partner Network</p>
-           <div className="flex flex-wrap justify-center items-center gap-12 lg:gap-24 opacity-60 grayscale hover:grayscale-0 transition-all duration-700">
-              {['VADO', 'BATHROOMS', 'CERAMICS', 'LIFESTYLE'].map((brand, i) => (
-                 <div key={i} className="text-2xl lg:text-3xl font-display font-extrabold tracking-tighter text-brand-secondary">
-                   {brand}
-                 </div>
-              ))}
-           </div>
-        </div>
-      </section>
+      <PartnerMarquee />
 
       {/* Featured VADO Collection */}
       <section className="py-24 bg-stone-50 border-b border-stone-100">
@@ -224,51 +215,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* 4. Kitchen Collection */}
-      <section className="py-24 bg-white border-y border-stone-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-            <div className="max-w-2xl">
-              <h2 className="text-4xl font-bold tracking-tight text-brand-secondary mb-4 font-display">Kitchen Solutions</h2>
-              <p className="text-stone-500 text-lg">Professional-grade kitchen mixers, sinks, and architectural slabs for modern culinary spaces.</p>
-            </div>
-            <Link to="/products" className="group flex items-center gap-2 text-sm font-semibold text-brand-primary uppercase tracking-wider">
-               Explore Kitchen <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[ 
-               { cat: "Kitchen Faucets", img: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=1000&auto=format&fit=crop" },
-               { cat: "Kitchen Sinks", img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1000&auto=format&fit=crop" },
-               { cat: "Worktops", img: "https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=1000&auto=format&fit=crop" }
-            ].map((item, i) => (
-              <Link 
-                key={i} 
-                to="/products"
-                className={`relative group overflow-hidden rounded-2xl min-h-[350px]`}
-              >
-                <div className="absolute inset-0 bg-stone-200">
-                  <img src={item.img} alt={item.cat} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
-                </div>
-                {/* Glassmorphism gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-secondary/90 via-brand-secondary/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
-                <div className="absolute bottom-0 left-0 p-8 w-full">
-                   <div className="flex justify-between items-end">
-                     <div>
-                       <span className="text-white/80 text-xs font-semibold uppercase tracking-wider mb-2 block">Category</span>
-                       <h3 className="text-3xl font-bold text-white font-display mb-1">{item.cat}</h3>
-                     </div>
-                     <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                       <ArrowUpRight size={20} />
-                     </div>
-                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* 5. Trending Products */}
       <section className="py-24 bg-stone-50 border-b border-stone-100">
@@ -302,47 +248,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* 6. Projects */}
-      <section className="py-24 bg-brand-secondary text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-brand-primary/10 blur-3xl rounded-full transform translate-x-1/3 -translate-y-1/4"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-            <div className="max-w-2xl">
-              <h2 className="text-4xl font-bold tracking-tight mb-4 font-display">Featured Projects</h2>
-              <p className="text-white/60 text-lg">AZM Group's premium portfolio across the iconic skylines of the United Arab Emirates.</p>
-            </div>
-            <Link to="/projects" className="group flex items-center gap-2 text-sm font-semibold text-brand-primary uppercase tracking-wider">
-               View All Projects <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             {[
-               { name: "Luxury Hotel Resort, Palm Jumeirah", img: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop" },
-               { name: "Premium Residential Villa, Emirates Hills", img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1000&auto=format&fit=crop" }
-             ].map((proj, i) => (
-                <div key={i} className="group relative rounded-2xl overflow-hidden aspect-[4/3] sm:aspect-video cursor-pointer">
-                  <div className="absolute inset-0 bg-stone-900">
-                    <OptimizedImage src={proj.img} alt={proj.name} className="group-hover:scale-105 transition-transform duration-700 opacity-80" />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-brand-secondary via-brand-secondary/20 to-transparent opacity-90"></div>
-                  <div className="absolute inset-x-0 bottom-0 p-8 flex justify-between items-end">
-                     <div>
-                       <div className="flex items-center gap-2 text-brand-primary mb-3">
-                         <MapPin size={16} /> <span className="text-sm font-medium uppercase tracking-wider">Dubai, UAE</span>
-                       </div>
-                       <h3 className="text-2xl font-bold text-white font-display mb-2">{proj.name}</h3>
-                       <p className="text-white/60 text-sm">Supplied: VADO Faucets, Showers, Architectural Tiles</p>
-                     </div>
-                     <div className="w-12 h-12 rounded-full bg-brand-primary flex items-center justify-center text-white transform group-hover:bg-white group-hover:text-brand-secondary transition-colors">
-                       <ArrowRight size={20} className="-rotate-45" />
-                     </div>
-                  </div>
-                </div>
-             ))}
-          </div>
-        </div>
-      </section>
 
       {/* 7. Why AZM Group */}
       <section className="py-24 bg-stone-50">
@@ -379,31 +284,7 @@ export function Home() {
       </section>
 
       {/* 11. Testimonials */}
-      <section className="py-24 bg-brand-secondary text-white relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-           <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-4xl font-bold tracking-tight mb-4 font-display">Client Endorsements</h2>
-              <p className="text-white/60 text-lg">Trusted by the most prestigious architectural practices in the Middle East.</p>
-           </div>
-           
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-             {[
-               { quote: "AZM Group has consistently delivered exceptional product quality and technical support for our luxury residential developments. Their understanding of high-end brassware is unmatched.", author: "Sarah Al Mansoori", role: "Principal Architect, Dubai" },
-               { quote: "The VADO collections supplied by AZM transformed our hotel's bathrooms into true sanctuaries. Flawless execution and reliable post-sales service.", author: "James Peterson", role: "Project Director, Hospitality Group" },
-               { quote: "A reliable partner for large-scale commercial projects. Their ability to source premium European ceramics and deliver on tight timelines is highly commendable.", author: "Ahmed Tariq", role: "Lead Developer, Abu Dhabi" }
-             ].map((t, idx) => (
-                <div key={idx} className="bg-white/5 border border-white/10 p-10 rounded-2xl backdrop-blur-sm relative">
-                  <Quote size={40} className="text-brand-primary/20 absolute top-8 right-8" />
-                  <p className="text-lg text-white/90 leading-relaxed mb-8 italic">"{t.quote}"</p>
-                  <div>
-                     <h4 className="font-bold text-white uppercase tracking-wider">{t.author}</h4>
-                     <p className="text-brand-primary text-xs font-semibold uppercase">{t.role}</p>
-                  </div>
-                </div>
-             ))}
-           </div>
-        </div>
-      </section>
+      <TestimonialCarousel />
 
       {/* 8. Catalog Downloads & 10. Showroom CTA Hybrid */}
       <section className="py-20 bg-stone-50">
@@ -478,7 +359,7 @@ export function Home() {
               <Link to="/contact" className="w-full sm:w-auto bg-brand-primary border border-brand-primary text-white px-8 py-4 rounded-full font-semibold uppercase tracking-wider hover:bg-transparent transition-colors text-sm flex items-center justify-center gap-2">
                 <Mail size={18} /> Request Quotation
               </Link>
-              <a href="https://wa.me/971501234567" target="_blank" rel="noreferrer" className="w-full sm:w-auto bg-transparent border border-white/30 text-white px-8 py-4 rounded-full font-semibold uppercase tracking-wider hover:bg-white hover:text-brand-secondary transition-colors text-sm flex items-center justify-center gap-2">
+              <a href="https://wa.me/971558090292" target="_blank" rel="noreferrer" className="w-full sm:w-auto bg-transparent border border-white/30 text-white px-8 py-4 rounded-full font-semibold uppercase tracking-wider hover:bg-white hover:text-brand-secondary transition-colors text-sm flex items-center justify-center gap-2">
                  WhatsApp Inquiry
               </a>
             </div>

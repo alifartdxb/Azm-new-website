@@ -63,9 +63,13 @@ export function Catalogues() {
   const [previewPdf, setPreviewPdf] = useState<string | null>(null);
 
   // Filters
+  
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>([]);
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+
 
   useEffect(() => {
     async function loadCatalogues() {
@@ -100,27 +104,40 @@ export function Catalogues() {
     }
   };
 
+  
   const filteredCatalogues = useMemo(() => {
     return catalogues.filter(c => {
+      const q = searchQuery.toLowerCase();
       const matchesSearch = searchQuery === '' || 
-        c.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        c.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.category?.toLowerCase().includes(searchQuery.toLowerCase());
-      
+        c.title?.toLowerCase().includes(q) || 
+        c.brand?.toLowerCase().includes(q) ||
+        c.category?.toLowerCase().includes(q) ||
+        c.productType?.toLowerCase().includes(q) ||
+        c.description?.toLowerCase().includes(q) ||
+        c.year?.toLowerCase().includes(q) ||
+        (c.tags && c.tags.some((t: string) => t.toLowerCase().includes(q)));
+        
       const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(c.brand);
       const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(c.category);
+      const matchesProductType = selectedProductTypes.length === 0 || selectedProductTypes.includes(c.productType);
       const matchesYear = selectedYears.length === 0 || selectedYears.includes(c.year);
+      const matchesLanguage = selectedLanguages.length === 0 || selectedLanguages.includes(c.language);
 
-      return matchesSearch && matchesBrand && matchesCategory && matchesYear;
+      return matchesSearch && matchesBrand && matchesCategory && matchesProductType && matchesYear && matchesLanguage;
     });
-  }, [catalogues, searchQuery, selectedBrands, selectedCategories, selectedYears]);
+  }, [catalogues, searchQuery, selectedBrands, selectedCategories, selectedProductTypes, selectedYears, selectedLanguages]);
 
+
+  
   const clearFilters = () => {
     setSelectedBrands([]);
     setSelectedCategories([]);
+    setSelectedProductTypes([]);
     setSelectedYears([]);
+    setSelectedLanguages([]);
     setSearchQuery('');
   };
+
 
   const schemas = [
     {
@@ -135,7 +152,7 @@ export function Catalogues() {
   return (
     <div className="flex-grow flex flex-col bg-stone-50">
       <SEO 
-        title="Product Catalogues Library | AZM Group"
+        title="Product Catalogues Library | Al Zahra Al Malakia"
         description="Browse complete product catalogues from leading international brands including bathroom solutions, sanitary ware, tiles, and building materials."
         keywords={["Bathroom Catalogue UAE", "Sanitary Ware Catalogue Dubai", "Tile Catalogue UAE", "Luxury Bathroom Products Catalogue", "Building Material Catalogue Dubai", "VADO Catalogue UAE", "Tile Supplier Dubai Catalogue"]}
         schemas={schemas}
@@ -434,7 +451,7 @@ export function Catalogues() {
             <Link to="/contact" className="px-8 py-4 bg-brand-primary text-white rounded-full font-bold uppercase tracking-wider text-sm hover:bg-brand-primary/90 transition-colors shadow-lg">
               Contact Sales Team
             </Link>
-            <a href="https://wa.me/971500000000" target="_blank" rel="noopener noreferrer" className="px-8 py-4 bg-[#25D366] text-white rounded-full font-bold uppercase tracking-wider text-sm hover:bg-[#20bd5a] transition-colors shadow-lg flex items-center justify-center gap-2">
+            <a href="https://wa.me/971558090292" target="_blank" rel="noopener noreferrer" className="px-8 py-4 bg-[#25D366] text-white rounded-full font-bold uppercase tracking-wider text-sm hover:bg-[#20bd5a] transition-colors shadow-lg flex items-center justify-center gap-2">
               WhatsApp Inquiry
             </a>
           </div>

@@ -23,8 +23,8 @@ export function About() {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "AZM Group",
-      "url": "https://www.azmgroup.ae",
-      "logo": "https://www.azmgroup.ae/logo.png",
+      "url": "https://www.alzahrabm.com",
+      "logo": "https://www.alzahrabm.com/logo.png",
       "description": "Leading supplier of premium bathroom and kitchen solutions in the UAE.",
       "address": {
         "@type": "PostalAddress",
@@ -36,8 +36,8 @@ export function About() {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.azmgroup.ae/" },
-        { "@type": "ListItem", "position": 2, "name": "About Us", "item": "https://www.azmgroup.ae/about" }
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.alzahrabm.com/" },
+        { "@type": "ListItem", "position": 2, "name": "About Us", "item": "https://www.alzahrabm.com/about" }
       ]
     },
     {

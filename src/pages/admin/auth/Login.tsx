@@ -77,7 +77,7 @@ export function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-lg border border-stone-200 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none transition-all"
-                  placeholder="admin@azmgroup.ae"
+                  placeholder="admin@alzahrabm.com"
                   required
                 />
               </div>

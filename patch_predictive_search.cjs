@@ -1,4 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+const fs = require('fs');
+let content = fs.readFileSync('src/components/PredictiveSearch.tsx', 'utf8');
+
+const newComponent = `import React, { useState, useEffect, useRef } from 'react';
 import { Search, Loader2, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -73,8 +76,8 @@ export function PredictiveSearch({ variant = 'light' }: { variant?: 'light' | 'd
               title: p.name || p.sku,
               id: p.id || p.sku,
               image: p.mainImage || p.thumbnail || (p.images && p.images[0]),
-              subtitle: `${p.brand || ''} • ${p.sku || ''}`,
-              link: `/products/${brandSlug}/${categorySlug}/${itemSlug}`
+              subtitle: \`\${p.brand || ''} • \${p.sku || ''}\`,
+              link: \`/products/\${brandSlug}/\${categorySlug}/\${itemSlug}\`
             });
           });
         }
@@ -94,7 +97,7 @@ export function PredictiveSearch({ variant = 'light' }: { variant?: 'light' | 'd
               id: c.id,
               image: c.thumbnail,
               subtitle: c.brand,
-              link: `/catalogues`
+              link: \`/catalogues\`
             });
           });
         }
@@ -116,7 +119,7 @@ export function PredictiveSearch({ variant = 'light' }: { variant?: 'light' | 'd
               id: b.id,
               image: b.coverImage,
               subtitle: b.category,
-              link: `/news/${b.slug || b.id}`
+              link: \`/news/\${b.slug || b.id}\`
             });
           });
         }
@@ -165,7 +168,7 @@ export function PredictiveSearch({ variant = 'light' }: { variant?: 'light' | 'd
   return (
     <div ref={wrapperRef} className="relative w-full z-50">
       <div className="relative">
-        <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${variant === 'dark' ? 'text-white/60' : 'text-stone-400'}`} size={18} />
+        <Search className={\`absolute left-4 top-1/2 -translate-y-1/2 \${variant === 'dark' ? 'text-white/60' : 'text-stone-400'}\`} size={18} />
         <input
           type="text"
           value={query}
@@ -173,10 +176,10 @@ export function PredictiveSearch({ variant = 'light' }: { variant?: 'light' | 'd
           onKeyDown={handleKeyDown}
           placeholder="Search products, catalogues, blogs..."
           aria-label="Search"
-          className={`w-full pl-12 pr-12 py-3 rounded-full focus:outline-none transition-all shadow-sm ${bgClasses} focus:ring-2 focus:ring-brand-primary/20`}
+          className={\`w-full pl-12 pr-12 py-3 rounded-full focus:outline-none transition-all shadow-sm \${bgClasses} focus:ring-2 focus:ring-brand-primary/20\`}
         />
         {isSearching && (
-          <Loader2 className={`absolute right-4 top-1/2 -translate-y-1/2 animate-spin ${variant === 'dark' ? 'text-white' : 'text-brand-primary'}`} size={18} />
+          <Loader2 className={\`absolute right-4 top-1/2 -translate-y-1/2 animate-spin \${variant === 'dark' ? 'text-white' : 'text-brand-primary'}\`} size={18} />
         )}
       </div>
 
@@ -203,13 +206,13 @@ export function PredictiveSearch({ variant = 'light' }: { variant?: 'light' | 'd
                         const globalIndex = results.indexOf(item);
                         return (
                           <Link
-                            key={`${item.type}-${item.id}`}
+                            key={\`\${item.type}-\${item.id}\`}
                             to={item.link}
                             onClick={() => {
                               setIsOpen(false);
                               setQuery('');
                             }}
-                            className={`flex items-center gap-4 p-4 transition-colors border-b border-stone-50 last:border-0 group ${globalIndex === selectedIndex ? 'bg-stone-100' : 'hover:bg-stone-50'}`}
+                            className={\`flex items-center gap-4 p-4 transition-colors border-b border-stone-50 last:border-0 group \${globalIndex === selectedIndex ? 'bg-stone-100' : 'hover:bg-stone-50'}\`}
                           >
                             {item.image && (
                               <div className="w-12 h-12 rounded bg-stone-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
@@ -247,3 +250,6 @@ export function PredictiveSearch({ variant = 'light' }: { variant?: 'light' | 'd
     </div>
   );
 }
+`;
+
+fs.writeFileSync('src/components/PredictiveSearch.tsx', newComponent);

@@ -14,12 +14,10 @@ import { motion, AnimatePresence } from "motion/react";
 import { CATEGORIES_DATA } from "../data";
 import { PredictiveSearch } from "./PredictiveSearch";
 import { AnalyticsManager } from "./AnalyticsManager";
-import { InquiryModal } from "./InquiryModal";
 
 export function Layout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeMegaMenu, setActiveMegaMenu] = useState<string | null>(null);
-  const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -39,6 +37,11 @@ export function Layout() {
       path: "/brands",
       megaMenu: "brands"
     },
+    { 
+      name: "Projects", 
+      path: "/projects",
+      megaMenu: "projects"
+    },
     { name: "Catalogues", path: "/catalogues" },
     { name: "News", path: "/blog" },
     { name: "Showrooms", path: "/contact" },
@@ -53,21 +56,17 @@ export function Layout() {
       {/* Top Bar for B2B Fast Actions */}
       <div className="bg-brand-secondary text-white py-2 text-xs md:text-sm font-medium tracking-wide">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-            <a href="tel:+97142844452" className="flex items-center gap-2 hover:text-white transition-colors">
-              <Phone size={14} /> Call Us: +971 4 28 444 52
+          <div className="flex items-center gap-6">
+            <a href="tel:+971501234567" className="flex items-center gap-2 hover:text-white transition-colors">
+              <Phone size={14} /> +971 50 123 4567
             </a>
-            <a href="https://wa.me/971558090292" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors">
-              <MessageCircle size={14} /> WhatsApp: +971 55 8090 292
+            <a href="mailto:sales@azmgroup.ae" className="hidden sm:flex items-center gap-2 hover:text-white transition-colors">
+              <Mail size={14} /> sales@azmgroup.ae
             </a>
-            <a href="mailto:sales@alzahrabm.com" className="hidden sm:flex items-center gap-2 hover:text-white transition-colors">
-              <Mail size={14} /> sales@alzahrabm.com
-            </a>
-            <span className="hidden lg:flex items-center gap-2">
-              Working Hours: Mon - Sun | 9:00 AM - 9:00 PM
-            </span>
           </div>
-          
+          <div className="flex items-center gap-4">
+            <Link to="/contact" className="hover:text-white transition-colors uppercase tracking-wider">B2B Trade Portal</Link>
+          </div>
         </div>
       </div>
 
@@ -209,7 +208,32 @@ export function Layout() {
                   </div>
                 )}
 
-                </div>
+                {activeMegaMenu === 'projects' && (
+                  <div className="grid grid-cols-3 gap-8">
+                     <Link to="/projects/atlantis-the-royal" className="group block relative overflow-hidden aspect-[4/3] bg-stone-100 rounded-xl">
+                        <img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=800&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Atlantis The Royal" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
+                          <span className="text-brand-primary text-[10px] font-bold uppercase tracking-wider mb-1">Hospitality</span>
+                          <h4 className="text-white font-bold text-lg">Atlantis The Royal</h4>
+                        </div>
+                     </Link>
+                     <Link to="/projects/emaar-beachfront" className="group block relative overflow-hidden aspect-[4/3] bg-stone-100 rounded-xl">
+                        <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Emaar Beachfront Residences" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
+                          <span className="text-brand-primary text-[10px] font-bold uppercase tracking-wider mb-1">Residential</span>
+                          <h4 className="text-white font-bold text-lg">Emaar Beachfront</h4>
+                        </div>
+                     </Link>
+                     <div className="flex flex-col justify-center p-8 bg-stone-50 border border-stone-200 rounded-xl">
+                        <h4 className="text-2xl font-bold font-display text-brand-secondary mb-4">Our Portfolio</h4>
+                        <p className="text-stone-600 mb-6">Discover our involvement in the most prestigious architectural developments across the UAE.</p>
+                        <Link to="/projects" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-brand-primary hover:text-brand-secondary transition-colors">
+                          View All Projects &rarr;
+                        </Link>
+                     </div>
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -251,16 +275,15 @@ export function Layout() {
       {/* Floating Action Buttons for Lead Gen */}
       <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
         <button
-          onClick={() => setIsInquiryModalOpen(true)}
           className="w-14 h-14 bg-stone-900 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform group relative"
           title="Product Inquiry"
         >
           <Mail size={24} />
           <span className="absolute right-full mr-4 bg-stone-900 text-white px-3 py-1.5 text-xs font-medium rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            Request Inquiry
+            Email Inquiry
           </span>
         </button>
-        <a href="https://wa.me/971558090292" target="_blank" rel="noopener noreferrer"
+        <button
           className="w-14 h-14 bg-green-500 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform group relative"
           title="WhatsApp Order"
         >
@@ -268,7 +291,7 @@ export function Layout() {
           <span className="absolute right-full mr-4 bg-stone-900 text-white px-3 py-1.5 text-xs font-medium rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             WhatsApp Order
           </span>
-        </a>
+        </button>
       </div>
 
       {/* Footer */}
@@ -288,12 +311,9 @@ export function Layout() {
               Premium Sanitary Ware, Bathroom Solutions, Kitchen Solutions, and Building Materials for distinguished B2B and retail projects across the UAE.
             </p>
             <div className="flex flex-col gap-3 text-sm">
-              <span className="flex items-start gap-2"><MapPin size={16} className="text-brand-primary mt-1" /> <span>Shop 12<br/>Building Materials Mall<br/>Warsan-3, Dubai<br/>United Arab Emirates</span></span>
-              <span className="flex items-center gap-2"><Phone size={16} className="text-brand-primary" /> +971 4 28 444 52</span>
-              <span className="flex items-center gap-2"><MessageCircle size={16} className="text-brand-primary" /> +971 55 8090 292</span>
-              <span className="flex items-center gap-2"><Mail size={16} className="text-brand-primary" /> sales@alzahrabm.com</span>
-              <span className="flex items-center gap-2 text-xs mt-2 text-white/60">Business Hours: Mon - Sun | 9:00 AM - 9:00 PM</span>
-              <a href="https://www.google.com/maps?q=25.161985,55.461234" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-stone-800 hover:bg-stone-700 text-white px-4 py-2 mt-4 text-xs font-bold uppercase tracking-wider rounded transition-colors w-fit"><MapPin size={14} /> View on Google Maps</a>
+              <span className="flex items-center gap-2"><MapPin size={16} className="text-brand-primary" /> Dubai, United Arab Emirates</span>
+              <span className="flex items-center gap-2"><Phone size={16} className="text-brand-primary" /> +971 50 123 4567</span>
+              <span className="flex items-center gap-2"><Mail size={16} className="text-brand-primary" /> sales@azmgroup.ae</span>
             </div>
           </div>
 
@@ -302,6 +322,7 @@ export function Layout() {
              <ul className="space-y-3 text-sm">
                <li><Link to="/about" className="hover:text-white transition-colors">Corporate Profile</Link></li>
                <li><Link to="/vado-collection" className="hover:text-white transition-colors">VADO UK Collection</Link></li>
+               <li><Link to="/projects" className="hover:text-white transition-colors">Our Projects</Link></li>
                <li><Link to="/catalogues" className="hover:text-white transition-colors">Download Catalogues</Link></li>
                <li><Link to="/contact" className="hover:text-white transition-colors">Showroom Locator</Link></li>
              </ul>
@@ -334,16 +355,15 @@ export function Layout() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pt-8 border-t border-white/10 text-xs flex flex-col md:flex-row justify-between items-center text-white/60">
-          <p>&copy; {new Date().getFullYear()} Al Zahra Al Malakia Bldg. Mat. Tr. LLC. All Rights Reserved.</p>
+          <p>&copy; {new Date().getFullYear()} AZM Group UAE. All rights reserved.</p>
           <div className="flex gap-4 mt-4 md:mt-0">
             <Link to="/admin" className="hover:text-brand-primary transition-colors font-semibold text-white/80">Admin Portal</Link>
             <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             <Link to="/sitemap" className="hover:text-white transition-colors">Sitemap</Link>
           </div>
-              </div>
+        </div>
       </footer>
-      <InquiryModal isOpen={isInquiryModalOpen} onClose={() => setIsInquiryModalOpen(false)} />
     </div>
   );
 }

@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, MessageCircle, Clock, ArrowRight, Building, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { SEO } from "../components/SEO";
-import { supabase } from "../lib/supabase";
+import { createDocument } from '../services/db';
 
 export function Contact() {
-  const [activeTab, setActiveTab] = useState<"general" | "quote" | "project" | "showroom">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "quote" | "showroom">("general");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,23 +24,19 @@ export function Contact() {
       const role = formData.get('role') as string;
       const message = formData.get('message') as string;
       
+      
       const payload = {
-        full_name: `${firstName} ${lastName}`.trim(),
+        name: `${firstName} ${lastName}`.trim(),
         email,
         phone,
-        company_name: companyName,
-        inquiry_type: activeTab,
-        message: `Role: ${role}\nMessage: ${message}`,
+        company: companyName,
+        message: `Role: ${role}\nInquiry Type: ${activeTab}\nMessage: ${message}`,
+        status: 'New',
+        createdAt: new Date().toISOString()
       };
 
-      if (supabase) {
-        const { error } = await supabase.from('leads').insert([payload]);
-        if (error) console.error("Supabase insert error:", error);
-      } else {
-        // Fallback mock submission
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        console.log("Mock lead payload:", payload);
-      }
+      await createDocument('inquiries', payload);
+
       
       setIsSubmitted(true);
       setTimeout(() => {
@@ -56,7 +52,6 @@ export function Contact() {
   const formTabs = [
     { id: "general", label: "Contact Form" },
     { id: "quote", label: "Request Quotation" },
-    { id: "project", label: "Project Inquiry" },
     { id: "showroom", label: "Book Appointment" }
   ] as const;
 
@@ -116,10 +111,10 @@ export function Contact() {
             </p>
             
             <div className="flex flex-wrap gap-4">
-              <a href="https://wa.me/971501234567" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-full font-semibold uppercase tracking-wider text-sm hover:bg-green-600 transition-colors shadow-lg shadow-green-500/20">
+              <a href="https://wa.me/971558090292" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-full font-semibold uppercase tracking-wider text-sm hover:bg-green-600 transition-colors shadow-lg shadow-green-500/20">
                 <MessageCircle size={18} /> WhatsApp Us
               </a>
-              <a href="tel:+97141234567" className="flex items-center gap-2 bg-white text-brand-secondary border border-stone-200 px-6 py-3 rounded-full font-semibold uppercase tracking-wider text-sm hover:border-brand-primary transition-colors">
+              <a href="tel:+97142844452" className="flex items-center gap-2 bg-white text-brand-secondary border border-stone-200 px-6 py-3 rounded-full font-semibold uppercase tracking-wider text-sm hover:border-brand-primary transition-colors">
                 <Phone size={18} /> Call Now
               </a>
               <a href="/catalogues" className="flex items-center gap-2 bg-brand-secondary text-white px-6 py-3 rounded-full font-semibold uppercase tracking-wider text-sm hover:bg-brand-primary transition-colors">
@@ -141,11 +136,11 @@ export function Contact() {
                </h3>
                <div className="flex items-start gap-4 text-stone-600 mb-4">
                  <MapPin size={20} className="flex-shrink-0 mt-1 text-stone-400" />
-                 <p className="leading-relaxed">AZM Group Headquarters<br/>Dubai Design District<br/>Building 3, Office 402<br/>Dubai, UAE</p>
+                 <p className="leading-relaxed">Al Zahra Al Malakia Bldg. Mat. Tr. LLC<br/>Shop 12<br/>Building Materials Mall<br/>Warsan-3, Dubai<br/>United Arab Emirates</p>
                </div>
                <div className="flex items-center gap-4 text-stone-600 mb-4">
                  <Clock size={20} className="flex-shrink-0 text-stone-400" />
-                 <p>Mon - Fri: 9:00 AM - 6:00 PM<br/>Sat, Sun: Closed</p>
+                 <p>Monday - Sunday<br/>9:00 AM - 9:00 PM</p>
                </div>
             </div>
 
@@ -168,14 +163,14 @@ export function Contact() {
                  <Mail size={18} className="text-brand-primary" /> Direct Contacts
                </h3>
                <div className="flex flex-col gap-4">
-                 <a href="mailto:sales@azmgroup.ae" className="text-stone-600 hover:text-brand-primary transition-colors flex items-center gap-3">
-                   <Mail size={18} className="text-stone-400" /> sales@azmgroup.ae
+                 <a href="mailto:sales@alzahrabm.com" className="text-stone-600 hover:text-brand-primary transition-colors flex items-center gap-3">
+                   <Mail size={18} className="text-stone-400" /> sales@alzahrabm.com
                  </a>
-                 <a href="mailto:projects@azmgroup.ae" className="text-stone-600 hover:text-brand-primary transition-colors flex items-center gap-3">
-                   <Mail size={18} className="text-stone-400" /> projects@azmgroup.ae
+                 <a href="mailto:sales@alzahrabm.com" className="text-stone-600 hover:text-brand-primary transition-colors flex items-center gap-3">
+                   <Mail size={18} className="text-stone-400" /> sales@alzahrabm.com
                  </a>
-                 <a href="mailto:support@azmgroup.ae" className="text-stone-600 hover:text-brand-primary transition-colors flex items-center gap-3">
-                   <Mail size={18} className="text-stone-400" /> support@azmgroup.ae
+                 <a href="mailto:sales@alzahrabm.com" className="text-stone-600 hover:text-brand-primary transition-colors flex items-center gap-3">
+                   <Mail size={18} className="text-stone-400" /> sales@alzahrabm.com
                  </a>
                </div>
             </div>

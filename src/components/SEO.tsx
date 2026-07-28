@@ -11,8 +11,8 @@ interface SEOProps {
 }
 
 export function SEO({
-  title = 'AZM Group | Luxury Bathroom & Kitchen Solutions UAE',
-  description = 'AZM Group is the leading supplier of luxury bathroom solutions, sanitary ware, and VADO UK products in Dubai and the UAE. Elevate your spaces with our premium collections.',
+  title = 'Al Zahra Al Malakia Bldg. Mat. Tr. LLC | Luxury Bathroom Solutions UAE',
+  description = 'Al Zahra Al Malakia Bldg. Mat. Tr. LLC is the leading supplier of luxury bathroom solutions, sanitary ware, and VADO UK products in Dubai and the UAE. Elevate your spaces with our premium collections.',
   canonical,
   type = 'website',
   image = 'https://sanipexgroup.com/default-og.jpg', // Placeholder, using a default image
@@ -24,20 +24,20 @@ export function SEO({
     "Bathroom Solutions Dubai",
     "Sanitary Ware Supplier UAE",
     "Kitchen Taps UAE",
-    "AZM Group"
+    "Al Zahra Al Malakia"
   ]
 }: SEOProps) {
   const location = useLocation();
-  const siteUrl = 'https://www.azmgroup.ae'; // Fictional URL
+  const siteUrl = 'https://www.alzahrabm.com'; // Fictional URL
   const currentUrl = canonical || `${siteUrl}${location.pathname}`;
 
   const defaultSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "AZM Group",
+    "name": "Al Zahra Al Malakia Bldg. Mat. Tr. LLC",
     "url": siteUrl,
     "logo": `${siteUrl}/logo.png`,
-    "description": "Leading B2B supplier of luxury sanitaryware and bathroom solutions in the UAE.",
+    "description": "Leading B2B supplier of luxury sanitaryware, building materials, and bathroom solutions in the UAE.",
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Dubai",
@@ -45,7 +45,7 @@ export function SEO({
     },
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+971-4-123-4567",
+      "telephone": "+971-4-28-444-52",
       "contactType": "customer service"
     }
   };
@@ -65,7 +65,7 @@ export function SEO({
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={image} />
-      <meta property="og:site_name" content="AZM Group" />
+      <meta property="og:site_name" content="Al Zahra Al Malakia" />
 
       {/* Twitter */}
       <meta property="twitter:card" content="summary_large_image" />

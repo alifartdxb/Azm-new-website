@@ -16,6 +16,13 @@ export function Products() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(urlCategory ? [urlCategory] : []);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedFinishes, setSelectedFinishes] = useState<string[]>([]);
+  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
+  const [selectedSeries, setSelectedSeries] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
+  const [selectedAvailability, setSelectedAvailability] = useState<string[]>([]);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<string>("Newest");
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,7 +51,20 @@ export function Products() {
   }, []);
 
   // Extract unique filter options
-  const allFinishes = Array.from(new Set(products.flatMap(p => p.finish || []))) as string[];
+  
+  // Helper to extract unique non-empty values
+  const getUniqueValues = (key: string) => {
+    return Array.from(new Set(products.map(p => p[key]).filter(Boolean))) as string[];
+  };
+  
+  const allFinishes = Array.from(new Set(products.flatMap(p => p.finish ? (Array.isArray(p.finish) ? p.finish : [p.finish]) : []))) as string[];
+  const allCollections = getUniqueValues('collection');
+  const allSeries = getUniqueValues('series');
+  const allColors = getUniqueValues('color');
+  const allMaterials = getUniqueValues('material');
+  const allCountries = getUniqueValues('country');
+  const allAvailability = getUniqueValues('availability');
+
 
   const toggleFilter = (list: string[], setList: (l: string[]) => void, value: string) => {
     if (list.includes(value)) {
@@ -58,6 +78,12 @@ export function Products() {
     setSelectedCategories([]);
     setSelectedBrands([]);
     setSelectedFinishes([]);
+    setSelectedCollections([]);
+    setSelectedSeries([]);
+    setSelectedColors([]);
+    setSelectedMaterials([]);
+    setSelectedAvailability([]);
+    setSelectedCountries([]);
     setSearchQuery("");
   };
 
@@ -153,9 +179,17 @@ export function Products() {
                   />
                 </div>
 
+                
                 <FilterSection title="Brands" options={BRANDS_DATA.map(b => ({id: b.id, name: b.name}))} selected={selectedBrands} toggle={(val) => toggleFilter(selectedBrands, setSelectedBrands, val)} />
                 <FilterSection title="Categories" options={CATEGORIES_DATA.map(c => ({id: c.id, name: c.name}))} selected={selectedCategories} toggle={(val) => toggleFilter(selectedCategories, setSelectedCategories, val)} />
+                <FilterSection title="Collections" options={allCollections.map(f => ({id: f, name: f}))} selected={selectedCollections} toggle={(val) => toggleFilter(selectedCollections, setSelectedCollections, val)} />
+                <FilterSection title="Series" options={allSeries.map(f => ({id: f, name: f}))} selected={selectedSeries} toggle={(val) => toggleFilter(selectedSeries, setSelectedSeries, val)} />
                 <FilterSection title="Finishes" options={allFinishes.map(f => ({id: f, name: f}))} selected={selectedFinishes} toggle={(val) => toggleFilter(selectedFinishes, setSelectedFinishes, val)} />
+                <FilterSection title="Colors" options={allColors.map(f => ({id: f, name: f}))} selected={selectedColors} toggle={(val) => toggleFilter(selectedColors, setSelectedColors, val)} />
+                <FilterSection title="Materials" options={allMaterials.map(f => ({id: f, name: f}))} selected={selectedMaterials} toggle={(val) => toggleFilter(selectedMaterials, setSelectedMaterials, val)} />
+                <FilterSection title="Availability" options={allAvailability.map(f => ({id: f, name: f}))} selected={selectedAvailability} toggle={(val) => toggleFilter(selectedAvailability, setSelectedAvailability, val)} />
+                <FilterSection title="Country of Origin" options={allCountries.map(f => ({id: f, name: f}))} selected={selectedCountries} toggle={(val) => toggleFilter(selectedCountries, setSelectedCountries, val)} />
+
 
                 <button 
                   onClick={clearAllFilters}
@@ -178,8 +212,23 @@ export function Products() {
           <div className="hidden lg:flex justify-between items-center mb-8 bg-white p-4 rounded-xl border border-stone-200">
             <h1 className="text-2xl font-bold font-display text-brand-secondary">
               Product Catalogue
-              <span className="ml-3 text-sm font-normal text-stone-400 bg-stone-100 px-3 py-1 rounded-full">{filteredProducts.length} Items</span>
+              <span className="ml-3 text-sm font-normal text-stone-400 bg-stone-100 px-3 py-1 rounded-full">Showing {filteredProducts.length} of {products.length} Products</span>
             </h1>
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-semibold uppercase tracking-wider text-stone-500">Sort By:</span>
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-stone-50 border border-stone-200 rounded-lg px-4 py-2 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand-primary"
+              >
+                <option value="Newest">Newest</option>
+                <option value="A-Z">A-Z</option>
+                <option value="Z-A">Z-A</option>
+                <option value="Featured">Featured</option>
+                <option value="Brand">Brand</option>
+                <option value="Most Viewed">Most Viewed</option>
+              </select>
+            </div>
           </div>
 
           {filteredProducts.length === 0 ? (

@@ -40,7 +40,7 @@ export function AdminLayout() {
     { name: "Products", href: "/admin/products", icon: Package },
     { name: "Brands", href: "/admin/brands", icon: Tags },
     { name: "Categories", href: "/admin/categories", icon: FolderTree },
-    { name: "Projects", href: "/admin/projects", icon: Briefcase },
+    
     { name: "Blogs", href: "/admin/blogs", icon: FileText },
     { name: "Media Library", href: "/admin/media", icon: ImageIcon },
     { name: "SEO Manager", href: "/admin/seo", icon: Search },

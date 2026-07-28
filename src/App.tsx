@@ -16,8 +16,6 @@ const About = lazy(() => import("./pages/About").then(module => ({ default: modu
 const Blog = lazy(() => import("./pages/Blog").then(module => ({ default: module.Blog })));
 const BlogDetail = lazy(() => import("./pages/BlogDetail").then(module => ({ default: module.BlogDetail })));
 const Catalogues = lazy(() => import("./pages/Catalogues").then(module => ({ default: module.Catalogues })));
-const Projects = lazy(() => import("./pages/Projects").then(module => ({ default: module.Projects })));
-const ProjectDetail = lazy(() => import("./pages/ProjectDetail").then(module => ({ default: module.ProjectDetail })));
 const GenericPage = lazy(() => import("./pages/GenericPage").then(module => ({ default: module.GenericPage })));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then(module => ({ default: module.NotFoundPage })));
 
@@ -30,13 +28,13 @@ const ProductForm = lazy(() => import("./pages/admin/products/ProductForm").then
 const ProductImport = lazy(() => import("./pages/admin/products/ProductImport").then(module => ({ default: module.ProductImport })));
 const AdminBrands = lazy(() => import("./pages/admin/AdminBrands").then(module => ({ default: module.AdminBrands })));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories").then(module => ({ default: module.AdminCategories })));
+const AdminTestimonials = lazy(() => import("./pages/admin/AdminTestimonials").then(module => ({ default: module.AdminTestimonials })));
 const AdminBlogs = lazy(() => import("./pages/admin/AdminBlogs").then(module => ({ default: module.AdminBlogs })));
 const AdminCatalogues = lazy(() => import("./pages/admin/catalogues/AdminCatalogues").then(module => ({ default: module.AdminCatalogues })));
 const AdminCatalogueForm = lazy(() => import("./pages/admin/catalogues/AdminCatalogueForm").then(module => ({ default: module.AdminCatalogueForm })));
 const AdminCatalogueImport = lazy(() => import("./pages/admin/catalogues/AdminCatalogueImport").then(module => ({ default: module.AdminCatalogueImport })));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers").then(module => ({ default: module.AdminUsers })));
 const AdminGeneric = lazy(() => import("./pages/admin/AdminGeneric").then(module => ({ default: module.AdminGeneric })));
-const AdminProjects = lazy(() => import("./pages/admin/AdminProjects").then(module => ({ default: module.AdminProjects })));
 const AdminLeads = lazy(() => import("./pages/admin/AdminLeads").then(module => ({ default: module.AdminLeads })));
 
 const PageLoader = () => (
@@ -62,7 +60,7 @@ export default function App() {
                 <Route path="products/import" element={<ProductImport />} />
                 <Route path="brands" element={<AdminBrands />} />
                 <Route path="categories" element={<AdminCategories />} />
-                <Route path="projects" element={<AdminProjects />} />
+                <Route path="testimonials" element={<AdminTestimonials />} />
                 <Route path="blogs" element={<AdminBlogs />} />
                 <Route path="catalogues" element={<AdminCatalogues />} />
                 <Route path="catalogues/add" element={<AdminCatalogueForm />} />
@@ -92,8 +90,6 @@ export default function App() {
               <Route path="catalogues" element={<Catalogues />} />
               <Route path="blog" element={<Blog />} />
               <Route path="blog/:slug" element={<BlogDetail />} />
-              <Route path="projects" element={<Projects />} />
-              <Route path="projects/:slug" element={<ProjectDetail />} />
               
               <Route path="*" element={<NotFoundPage />} />
             </Route>

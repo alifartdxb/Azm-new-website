@@ -18,7 +18,6 @@ export function SitemapViewer() {
       }))
     },
     { name: "VADO Collection", path: "/vado-collection" },
-    { name: "Projects", path: "/projects" },
     { name: "Catalogues", path: "/catalogues" },
     { name: "News and Blogs", path: "/news" },
     { name: "Showrooms", path: "/showrooms" },

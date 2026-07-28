@@ -15,7 +15,7 @@ export function AdminLeads() {
   const loadLeads = async () => {
     try {
       setLoading(true);
-      const data = await getCollection('inquiries');
+      const data = await getCollection('leads');
       setLeads(data);
     } catch (error) {
       console.error('Failed to load leads:', error);
@@ -27,7 +27,7 @@ export function AdminLeads() {
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this lead?')) return;
     try {
-      await deleteDocument('inquiries', id);
+      await deleteDocument('leads', id);
       setLeads(leads.filter(l => l.id !== id));
       if (viewingLead?.id === id) setViewingLead(null);
     } catch (error) {
@@ -38,7 +38,7 @@ export function AdminLeads() {
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
-      await updateDocument('inquiries', id, { status: newStatus });
+      await updateDocument('leads', id, { status: newStatus });
       setLeads(leads.map(l => l.id === id ? { ...l, status: newStatus } : l));
       if (viewingLead?.id === id) setViewingLead({ ...viewingLead, status: newStatus });
     } catch (error) {
@@ -53,23 +53,11 @@ export function AdminLeads() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center flex-wrap gap-4">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold font-display text-brand-secondary">Inquiries Management</h1>
-          <p className="text-stone-500 text-sm">Manage incoming product inquiries, quotes, and contact requests.</p>
+          <h1 className="text-2xl font-bold font-display text-brand-secondary">Leads Management</h1>
+          <p className="text-stone-500 text-sm">Manage incoming inquiries and contact requests.</p>
         </div>
-        <button onClick={() => {
-          const headers = ['id', 'name', 'company', 'email', 'phone', 'productName', 'sku', 'status', 'createdAt', 'message'];
-          const csv = [headers.join(','), ...leads.map(l => headers.map(h => `"${(l[h]||'').toString().replace(/"/g, '""')}"`).join(','))].join('\n');
-          const blob = new Blob([csv], { type: 'text/csv' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `inquiries-${new Date().toISOString().split('T')[0]}.csv`;
-          a.click();
-        }} className="px-4 py-2 bg-brand-primary text-white text-sm font-bold uppercase tracking-wider rounded-lg hover:bg-brand-secondary transition-colors">
-          Export CSV
-        </button>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">
@@ -94,7 +82,6 @@ export function AdminLeads() {
                   <tr>
                     <th className="px-6 py-4">Name</th>
                     <th className="px-6 py-4">Contact</th>
-                    <th className="px-6 py-4">Product/SKU</th>
                     <th className="px-6 py-4">Date</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4 text-right">Actions</th>
@@ -111,17 +98,6 @@ export function AdminLeads() {
                       <td className="px-6 py-4 text-stone-600">
                         <div>{lead.email}</div>
                         <div className="text-xs text-stone-400">{lead.phone}</div>
-                        {lead.company && <div className="text-xs font-medium text-stone-500">{lead.company}</div>}
-                      </td>
-                      <td className="px-6 py-4 text-stone-600">
-                        {lead.productName ? (
-                           <>
-                             <div className="font-bold text-stone-700 text-xs truncate max-w-[150px]">{lead.productName}</div>
-                             <div className="text-[10px] text-stone-400 uppercase tracking-wider">{lead.sku}</div>
-                           </>
-                        ) : (
-                           <span className="text-xs text-stone-400 italic">General Inquiry</span>
-                        )}
                       </td>
                       <td className="px-6 py-4 text-stone-500 text-xs">
                         {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : '-'}
@@ -137,10 +113,8 @@ export function AdminLeads() {
                           }`}
                         >
                           <option value="New">New</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="Quotation Sent">Quotation Sent</option>
+                          <option value="Contacted">Contacted</option>
                           <option value="Closed">Closed</option>
-                          <option value="Spam">Spam</option>
                         </select>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -197,21 +171,6 @@ export function AdminLeads() {
                   {viewingLead.message || 'No message provided.'}
                 </div>
               </div>
-              {viewingLead.productName && (
-                <div className="bg-stone-50 p-4 rounded-lg border border-stone-100 mt-4">
-                  <p className="text-xs text-stone-500 uppercase font-bold tracking-wider mb-2">Product Inquiry Details</p>
-                  <p className="font-medium text-stone-800 text-sm mb-1">{viewingLead.productName}</p>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-stone-600">
-                    {viewingLead.sku && <div><span className="text-stone-400">SKU:</span> {viewingLead.sku}</div>}
-                    {viewingLead.brand && <div><span className="text-stone-400">Brand:</span> {viewingLead.brand}</div>}
-                    {viewingLead.quantity && <div><span className="text-stone-400">Qty:</span> {viewingLead.quantity}</div>}
-                    {viewingLead.projectName && <div><span className="text-stone-400">Project:</span> {viewingLead.projectName}</div>}
-                  </div>
-                  {viewingLead.productUrl && (
-                    <a href={viewingLead.productUrl} target="_blank" rel="noreferrer" className="text-xs text-brand-primary hover:underline mt-2 inline-block">View Product Page</a>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         )}

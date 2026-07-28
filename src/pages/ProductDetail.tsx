@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { SEO } from '../components/SEO';
 import { OptimizedImage } from '../components/OptimizedImage';
+import { InquiryModal } from '../components/InquiryModal';
 import { getProductBySlug, getBrandBySlug, getCategoryById, PRODUCTS_DATA, BRANDS_DATA, CATEGORIES_DATA } from '../data';
-import { ArrowLeft, ChevronRight, FileText, MessageSquare, Mail, Download, Ruler, Settings, CheckCircle2, Shield, Share2 } from 'lucide-react';
+import { Phone, ArrowLeft, ChevronRight, FileText, MessageSquare, Mail, Download, Ruler, Settings, CheckCircle2, Shield, Share2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getCollection } from '../services/db';
 
@@ -16,6 +17,7 @@ export function ProductDetail() {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
+  const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -54,6 +56,7 @@ export function ProductDetail() {
     return (
       <div className="flex-grow flex items-center justify-center min-h-[50vh]">
         <div className="w-8 h-8 border-4 border-stone-200 border-t-brand-primary rounded-full animate-spin"></div>
+      
       </div>
     );
   }
@@ -209,17 +212,20 @@ export function ProductDetail() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col gap-4 mb-12">
-              <Link to={`/contact?tab=quote&sku=${product.sku}`} className="w-full flex items-center justify-center gap-2 bg-brand-primary text-white py-4 rounded-xl font-bold uppercase tracking-wider hover:bg-brand-secondary transition-colors shadow-lg hover:shadow-xl">
+              <button onClick={() => setIsInquiryModalOpen(true)} className="w-full flex items-center justify-center gap-2 bg-brand-primary text-white py-4 rounded-xl font-bold uppercase tracking-wider hover:bg-brand-secondary transition-colors shadow-lg hover:shadow-xl">
                 Request a Quote <FileText size={18} />
-              </Link>
+              </button>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <a href={`https://wa.me/971501234567?text=I am interested in ${product.name} (${product.sku})`} target="_blank" rel="noreferrer" className="w-full flex items-center justify-center gap-2 bg-green-500 text-white py-4 rounded-xl font-bold uppercase tracking-wider hover:bg-green-600 transition-colors shadow-lg">
+                <button onClick={() => setIsInquiryModalOpen(true)} className="w-full flex items-center justify-center gap-2 bg-green-500 text-white py-4 rounded-xl font-bold uppercase tracking-wider hover:bg-green-600 transition-colors shadow-lg">
                   WhatsApp Inquiry <MessageSquare size={18} />
-                </a>
-                <a href={`mailto:sales@azmgroup.ae?subject=Inquiry about ${product.sku}`} className="w-full flex items-center justify-center gap-2 bg-stone-100 text-stone-800 border border-stone-200 py-4 rounded-xl font-bold uppercase tracking-wider hover:bg-stone-200 transition-colors">
-                  Email Inquiry <Mail size={18} />
+                </button>
+                <a href="tel:+97142844452" className="w-full flex items-center justify-center gap-2 bg-stone-800 text-white py-4 rounded-xl font-bold uppercase tracking-wider hover:bg-stone-900 transition-colors shadow-lg">
+                  Call Now <Phone size={18} />
                 </a>
               </div>
+              <button onClick={() => setIsInquiryModalOpen(true)} className="w-full flex items-center justify-center gap-2 bg-stone-100 text-stone-800 border border-stone-200 py-4 rounded-xl font-bold uppercase tracking-wider hover:bg-stone-200 transition-colors">
+                  Email Inquiry <Mail size={18} />
+              </button>
             </div>
 
             {/* Downloads */}
@@ -362,7 +368,16 @@ export function ProductDetail() {
           </div>
         </div>
       </div>
-      
+      <InquiryModal 
+        isOpen={isInquiryModalOpen} 
+        onClose={() => setIsInquiryModalOpen(false)} 
+        product={{
+          name: product.name,
+          sku: product.sku,
+          brand: brand?.name || product.brand || '',
+          category: category?.name || product.category || ''
+        }}
+      />
     </div>
   );
 }
