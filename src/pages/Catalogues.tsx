@@ -55,6 +55,38 @@ const MOCK_CATALOGUES = [
   }
 ];
 
+
+function FilterSection({ title, options, selected, toggle }: { title: string, options: string[], selected: string[], toggle: (val: string) => void }) {
+  const [isOpen, setIsOpen] = React.useState(true);
+  if (options.length === 0) return null;
+  return (
+    <div className="border-b border-stone-100 pb-6 mb-6 last:border-0">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full text-left font-bold text-sm uppercase tracking-widest text-stone-900 mb-4"
+      >
+        {title}
+        <ChevronRight size={16} className={`transform transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+            <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+              {options.map((opt) => (
+                <label key={opt} className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selected.includes(opt) ? 'bg-brand-primary border-brand-primary text-white' : 'border-stone-300 group-hover:border-brand-primary'}`}>
+                    {selected.includes(opt) && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                  </div>
+                  <span className={`text-sm ${selected.includes(opt) ? 'font-bold text-stone-900' : 'text-stone-600 group-hover:text-stone-900 transition-colors'}`}>{opt}</span>
+                </label>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 export function Catalogues() {
   const [catalogues, setCatalogues] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +101,13 @@ export function Catalogues() {
   const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>([]);
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [selectedFinishes, setSelectedFinishes] = useState<string[]>([]);
+  const [selectedOrigins, setSelectedOrigins] = useState<string[]>([]);
+  const [selectedTileTypes, setSelectedTileTypes] = useState<string[]>([]);
+  const [selectedStoneTypes, setSelectedStoneTypes] = useState<string[]>([]);
+  const [selectedThicknesses, setSelectedThicknesses] = useState<string[]>([]);
 
 
   useEffect(() => {
@@ -92,9 +131,17 @@ export function Catalogues() {
   }, []);
 
   // Extract unique filter options
-  const allBrands = Array.from(new Set(catalogues.map(c => c.brand).filter(Boolean)));
-  const allCategories = Array.from(new Set(catalogues.map(c => c.category).filter(Boolean)));
-  const allYears = Array.from(new Set(catalogues.map(c => c.year).filter(Boolean))).sort().reverse();
+  const allBrands = Array.from<string>(new Set(catalogues.map(c => c.brand).filter(Boolean)));
+  const allCategories = Array.from<string>(new Set(catalogues.map(c => c.category).filter(Boolean)));
+  const allYears = Array.from<string>(new Set(catalogues.map(c => c.year).filter(Boolean))).sort().reverse();
+  const allProductTypes = Array.from<string>(new Set(catalogues.map(c => c.productType).filter(Boolean)));
+  const allCollections = Array.from<string>(new Set(catalogues.map(c => c.collection).filter(Boolean)));
+  const allSizes = Array.from<string>(new Set(catalogues.map(c => c.size).filter(Boolean)));
+  const allFinishes = Array.from<string>(new Set(catalogues.map(c => c.finish).filter(Boolean)));
+  const allOrigins = Array.from<string>(new Set(catalogues.map(c => c.origin || c.madeIn).filter(Boolean)));
+  const allTileTypes = Array.from<string>(new Set(catalogues.map(c => c.tileType).filter(Boolean)));
+  const allStoneTypes = Array.from<string>(new Set(catalogues.map(c => c.stoneType).filter(Boolean)));
+  const allThicknesses = Array.from<string>(new Set(catalogues.map(c => c.thickness).filter(Boolean)));
 
   const toggleFilter = (list: string[], setList: (l: string[]) => void, value: string) => {
     if (list.includes(value)) {
@@ -109,12 +156,12 @@ export function Catalogues() {
     return catalogues.filter(c => {
       const q = searchQuery.toLowerCase();
       const matchesSearch = searchQuery === '' || 
-        c.title?.toLowerCase().includes(q) || 
-        c.brand?.toLowerCase().includes(q) ||
-        c.category?.toLowerCase().includes(q) ||
-        c.productType?.toLowerCase().includes(q) ||
-        c.description?.toLowerCase().includes(q) ||
-        c.year?.toLowerCase().includes(q) ||
+        (c.title && c.title.toLowerCase().includes(q)) || 
+        (c.brand && c.brand.toLowerCase().includes(q)) ||
+        (c.category && c.category.toLowerCase().includes(q)) ||
+        (c.productType && c.productType.toLowerCase().includes(q)) ||
+        (c.description && c.description.toLowerCase().includes(q)) ||
+        (c.year && c.year.toLowerCase().includes(q)) ||
         (c.tags && c.tags.some((t: string) => t.toLowerCase().includes(q)));
         
       const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(c.brand);
@@ -122,10 +169,17 @@ export function Catalogues() {
       const matchesProductType = selectedProductTypes.length === 0 || selectedProductTypes.includes(c.productType);
       const matchesYear = selectedYears.length === 0 || selectedYears.includes(c.year);
       const matchesLanguage = selectedLanguages.length === 0 || selectedLanguages.includes(c.language);
+      const matchesCollection = selectedCollections.length === 0 || selectedCollections.includes(c.collection);
+      const matchesSize = selectedSizes.length === 0 || selectedSizes.includes(c.size);
+      const matchesFinish = selectedFinishes.length === 0 || selectedFinishes.includes(c.finish);
+      const matchesOrigin = selectedOrigins.length === 0 || selectedOrigins.includes(c.origin) || selectedOrigins.includes(c.madeIn);
+      const matchesTileType = selectedTileTypes.length === 0 || selectedTileTypes.includes(c.tileType);
+      const matchesStoneType = selectedStoneTypes.length === 0 || selectedStoneTypes.includes(c.stoneType);
+      const matchesThickness = selectedThicknesses.length === 0 || selectedThicknesses.includes(c.thickness);
 
-      return matchesSearch && matchesBrand && matchesCategory && matchesProductType && matchesYear && matchesLanguage;
+      return matchesSearch && matchesBrand && matchesCategory && matchesProductType && matchesYear && matchesLanguage && matchesCollection && matchesSize && matchesFinish && matchesOrigin && matchesTileType && matchesStoneType && matchesThickness;
     });
-  }, [catalogues, searchQuery, selectedBrands, selectedCategories, selectedProductTypes, selectedYears, selectedLanguages]);
+  }, [catalogues, searchQuery, selectedBrands, selectedCategories, selectedProductTypes, selectedYears, selectedLanguages, selectedCollections, selectedSizes, selectedFinishes, selectedOrigins, selectedTileTypes, selectedStoneTypes, selectedThicknesses]);
 
 
   
@@ -135,6 +189,13 @@ export function Catalogues() {
     setSelectedProductTypes([]);
     setSelectedYears([]);
     setSelectedLanguages([]);
+    setSelectedCollections([]);
+    setSelectedSizes([]);
+    setSelectedFinishes([]);
+    setSelectedOrigins([]);
+    setSelectedTileTypes([]);
+    setSelectedStoneTypes([]);
+    setSelectedThicknesses([]);
     setSearchQuery('');
   };
 
@@ -214,61 +275,22 @@ export function Catalogues() {
                 </div>
 
                 <div className="space-y-8">
-                  {/* Category Filter */}
-                  {allCategories.length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Categories</h4>
-                      <div className="space-y-2">
-                        {allCategories.map(cat => (
-                          <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedCategories.includes(cat) ? 'bg-brand-primary border-brand-primary' : 'border-stone-300 group-hover:border-brand-primary'}`}>
-                              {selectedCategories.includes(cat) && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
-                            </div>
-                            <span className={`text-sm ${selectedCategories.includes(cat) ? 'font-bold text-stone-900' : 'text-stone-600 group-hover:text-stone-900'}`}>{cat}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Brand Filter */}
-                  {allBrands.length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Brands</h4>
-                      <div className="space-y-2">
-                        {allBrands.map(brand => (
-                          <label key={brand} className="flex items-center gap-3 cursor-pointer group">
-                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedBrands.includes(brand) ? 'bg-brand-primary border-brand-primary' : 'border-stone-300 group-hover:border-brand-primary'}`}>
-                              {selectedBrands.includes(brand) && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
-                            </div>
-                            <span className={`text-sm ${selectedBrands.includes(brand) ? 'font-bold text-stone-900' : 'text-stone-600 group-hover:text-stone-900'}`}>{brand}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Year Filter */}
-                  {allYears.length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Year</h4>
-                      <div className="space-y-2">
-                        {allYears.map(year => (
-                          <label key={year} className="flex items-center gap-3 cursor-pointer group">
-                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedYears.includes(year) ? 'bg-brand-primary border-brand-primary' : 'border-stone-300 group-hover:border-brand-primary'}`}>
-                              {selectedYears.includes(year) && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
-                            </div>
-                            <span className={`text-sm ${selectedYears.includes(year) ? 'font-bold text-stone-900' : 'text-stone-600 group-hover:text-stone-900'}`}>{year}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  
+                  <FilterSection title="Brands" options={allBrands} selected={selectedBrands} toggle={(val) => toggleFilter(selectedBrands, setSelectedBrands, val)} />
+                  <FilterSection title="Categories" options={allCategories} selected={selectedCategories} toggle={(val) => toggleFilter(selectedCategories, setSelectedCategories, val)} />
+                  <FilterSection title="Product Types" options={allProductTypes} selected={selectedProductTypes} toggle={(val) => toggleFilter(selectedProductTypes, setSelectedProductTypes, val)} />
+                  <FilterSection title="Collections" options={allCollections} selected={selectedCollections} toggle={(val) => toggleFilter(selectedCollections, setSelectedCollections, val)} />
+                  <FilterSection title="Tile Types" options={allTileTypes} selected={selectedTileTypes} toggle={(val) => toggleFilter(selectedTileTypes, setSelectedTileTypes, val)} />
+                  <FilterSection title="Stone Types" options={allStoneTypes} selected={selectedStoneTypes} toggle={(val) => toggleFilter(selectedStoneTypes, setSelectedStoneTypes, val)} />
+                  <FilterSection title="Sizes" options={allSizes} selected={selectedSizes} toggle={(val) => toggleFilter(selectedSizes, setSelectedSizes, val)} />
+                  <FilterSection title="Finishes" options={allFinishes} selected={selectedFinishes} toggle={(val) => toggleFilter(selectedFinishes, setSelectedFinishes, val)} />
+                  <FilterSection title="Thickness" options={allThicknesses} selected={selectedThicknesses} toggle={(val) => toggleFilter(selectedThicknesses, setSelectedThicknesses, val)} />
+                  <FilterSection title="Origin / Made In" options={allOrigins} selected={selectedOrigins} toggle={(val) => toggleFilter(selectedOrigins, setSelectedOrigins, val)} />
+                  <FilterSection title="Years" options={allYears} selected={selectedYears} toggle={(val) => toggleFilter(selectedYears, setSelectedYears, val)} />
                 </div>
               </div>
             </div>
-
-            {/* Catalogues Grid */}
+ {/* Catalogues Grid */}
             <div className="lg:w-3/4 flex flex-col">
               
               {/* Search & Actions Bar */}

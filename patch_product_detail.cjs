@@ -1,91 +1,21 @@
 const fs = require('fs');
+
 let content = fs.readFileSync('src/pages/ProductDetail.tsx', 'utf8');
 
-if (!content.includes('import { getCollection }')) {
-  content = content.replace(
-    /import \{ getProductBySlug, BRANDS_DATA, CATEGORIES_DATA, getRelatedProducts \} from '\.\.\/data';/,
-    `import { BRANDS_DATA, CATEGORIES_DATA } from '../data';\nimport { getCollection, getDocument } from '../services/db';`
-  );
-}
+// We need to move these 3 lines:
+// const [dbBrand, setDbBrand] = useState<any>(null);
+// const [dbCategory, setDbCategory] = useState<any>(null);
+// useEffect(() => { ... }, [product])
+// Before the `if (loading) { return ... }`
 
-content = content.replace(
-  /const product = getProductBySlug\(sku \|\| ''\);/,
-  `const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+// First, remove the `if (loading)` and `if (!product)` returns
+content = content.replace(/if \(loading\) \{\s+return \(\s+<div className="flex-grow flex items-center justify-center min-h-\[50vh\]">\s+<div className="w-8 h-8 border-4 border-stone-200 border-t-brand-primary rounded-full animate-spin"><\/div>\s+<\/div>\s+\);\s+\}\s+if \(loading\) return <div className="py-24 text-center">Loading\.\.\.<\/div>;\s+if \(!product\) \{\s+return <NotFoundPage \/>;\s+\}/, "/* EARLY RETURNS MOVED DOWN */");
 
-  useEffect(() => {
-    async function loadProduct() {
-      if (!sku) return;
-      try {
-        // Find product by slug or sku
-        const data = await getCollection('products');
-        const found = data.find((p: any) => p.sku === sku || p.urlSlug === sku);
-        setProduct(found || null);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadProduct();
-  }, [sku]);`
-);
+content = content.replace(/  const \[dbBrand, setDbBrand\] = useState<any>\(null\);\s+const \[dbCategory, setDbCategory\] = useState<any>\(null\);\s+useEffect\(\(\) => \{\s+async function loadBrandAndCat\(\) \{\s+if \(!product\) return;\s+try \{\s+if \(product\.brandId\) \{\s+const b = await getDocument\('brands', product\.brandId\);\s+if \(b\) setDbBrand\(b\);\s+\}\s+if \(product\.categoryId\) \{\s+const c = await getDocument\('categories', product\.categoryId\);\s+if \(c\) setDbCategory\(c\);\s+\}\s+\} catch \(e\) \{\s+console\.error\(e\);\s+\}\s+\}\s+loadBrandAndCat\(\);\s+\}, \[product\]\);/, function(match) {
+  return match + "\n\n  if (loading) {\n    return (\n      <div className=\"flex-grow flex items-center justify-center min-h-[50vh]\">\n        <div className=\"w-8 h-8 border-4 border-stone-200 border-t-brand-primary rounded-full animate-spin\"></div>\n      </div>\n    );\n  }\n\n  if (!product) {\n    return <NotFoundPage />;\n  }\n";
+});
 
-content = content.replace(
-  /const relatedProducts = product \? getRelatedProducts\(product\.sku\) : \[\];/,
-  `const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
-  
-  useEffect(() => {
-    async function loadRelated() {
-      if (!product) return;
-      try {
-        const data = await getCollection('products');
-        const related = data.filter((p: any) => p.status !== 'Draft' && p.categoryId === product.categoryId && p.id !== product.id).slice(0, 4);
-        setRelatedProducts(related);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    loadRelated();
-  }, [product]);`
-);
-
-content = content.replace(
-  /if \(!product\) \{/,
-  `if (loading) return <div className="py-24 text-center">Loading...</div>;
-  if (!product) {`
-);
-
-content = content.replace(
-  /import React, \{ useState, useEffect, useRef \} from 'react';/,
-  `import React, { useState, useEffect, useRef } from 'react';`
-);
-
-// We need to fix images logic
-content = content.replace(
-  /const \[activeImage, setActiveImage\] = useState\(0\);/,
-  `const imagesList = product?.images && product.images.length > 0 ? product.images : (product?.mainImage ? [product.mainImage] : ['https://placehold.co/400']);
-  const [activeImage, setActiveImage] = useState(0);`
-);
-
-content = content.replace(
-  /src=\{product\.images\[activeImage\]\}/g,
-  `src={imagesList[activeImage]}`
-);
-
-content = content.replace(
-  /product\.images\.map/g,
-  `imagesList.map`
-);
-
-content = content.replace(
-  /\{relatedProducts\.map\(\(relatedProduct, idx\) => \(/g,
-  `{relatedProducts.map((relatedProduct: any, idx: number) => (`
-);
-
-content = content.replace(
-  /src=\{relatedProduct\.images\[0\]\}/g,
-  `src={relatedProduct.mainImage || relatedProduct.thumbnail || (relatedProduct.images && relatedProduct.images[0]) || 'https://placehold.co/400'}`
-);
+// Since the `/* EARLY RETURNS MOVED DOWN */` was where it used to be, let's remove that.
+content = content.replace(/\/\* EARLY RETURNS MOVED DOWN \*\//, "");
 
 fs.writeFileSync('src/pages/ProductDetail.tsx', content);

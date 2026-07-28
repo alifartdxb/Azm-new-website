@@ -178,9 +178,9 @@ export function searchProducts(query: string) {
   const lowerQuery = query.toLowerCase();
   
   return PRODUCTS_DATA.filter(product => 
-    product.name.toLowerCase().includes(lowerQuery) ||
-    product.sku.toLowerCase().includes(lowerQuery) ||
-    product.collection.toLowerCase().includes(lowerQuery) ||
-    product.series.toLowerCase().includes(lowerQuery)
+    (product.name || '').toLowerCase().includes(lowerQuery) ||
+    (product.sku || '').toLowerCase().includes(lowerQuery) ||
+    (product.collection || '').toLowerCase().includes(lowerQuery) ||
+    (product.series || '').toLowerCase().includes(lowerQuery)
   );
 }

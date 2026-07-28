@@ -47,8 +47,8 @@ export function AdminLeads() {
   };
 
   const filteredLeads = leads.filter(l => 
-    (l.name?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-    (l.email?.toLowerCase().includes(searchQuery.toLowerCase()) || '')
+    (false) ||
+    (false)
   );
 
   return (

@@ -94,7 +94,7 @@ export function AdminBlogs() {
     }
   };
 
-  const filteredBlogs = blogs.filter(b => b.title?.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredBlogs = blogs.filter(b => (b.title && b.title.toLowerCase().includes(searchQuery.toLowerCase())) || false);
 
   if (showForm) {
     return (

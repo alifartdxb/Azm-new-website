@@ -118,12 +118,12 @@ export function ProductList() {
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = 
-      (p.name?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-      (p.sku?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-      (p.brand?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-      (p.category?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-      (p.collection?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-      (p.finish?.toLowerCase().includes(searchQuery.toLowerCase()) || '');
+      (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (p.collection && p.collection.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (p.finish && p.finish.toLowerCase().includes(searchQuery.toLowerCase()));
       
     const matchesBrand = filterBrand ? p.brand === filterBrand : true;
     const matchesCategory = filterCategory ? p.category === filterCategory : true;

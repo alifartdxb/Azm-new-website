@@ -1,7 +1,7 @@
 import { useState, ImgHTMLAttributes } from 'react';
 
 interface OptimizedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
-  src: string;
+  src?: string;
   alt: string;
   fallbackSrc?: string;
   className?: string;
@@ -18,7 +18,8 @@ export function OptimizedImage({
   const [error, setError] = useState(false);
 
   // Simulating CDN transformation
-  const getCdnUrl = (url: string) => {
+  const getCdnUrl = (url: string | undefined) => {
+    if (!url) return '';
     // In a real app we'd append width/quality params for a CDN like Cloudinary or Imgix
     if (url.includes('unsplash.com')) {
       return url.includes('auto=format') ? url : `${url}&auto=format&fit=crop&q=80`;
@@ -32,7 +33,7 @@ export function OptimizedImage({
         <div className="absolute inset-0 animate-pulse bg-stone-200" />
       )}
       <img
-        src={error ? fallbackSrc : getCdnUrl(src)}
+        src={error || !src ? fallbackSrc : getCdnUrl(src)}
         alt={alt}
         loading="lazy"
         decoding="async"

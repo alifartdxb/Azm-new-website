@@ -65,8 +65,8 @@ export function PredictiveSearch({ variant = 'light' }: { variant?: 'light' | 'd
           ).slice(0, 5); // Limit to 5
           
           matchedProducts.forEach((p: any) => {
-            const brandSlug = p.brand?.toLowerCase() || 'brand';
-            const categorySlug = p.category?.toLowerCase() || 'category';
+            const brandSlug = p.brand?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'brand';
+            const categorySlug = p.category?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'category';
             const itemSlug = p.slug || p.urlSlug || p.sku;
             globalResults.push({
               type: 'Product',

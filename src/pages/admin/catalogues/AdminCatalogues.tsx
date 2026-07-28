@@ -92,9 +92,9 @@ export function AdminCatalogues() {
 
   const filteredCatalogues = catalogues.filter(c => {
     const matchesSearch = 
-      (c.title?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-      (c.brand?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-      (c.category?.toLowerCase().includes(searchQuery.toLowerCase()) || '');
+      (c.title && c.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (c.brand && c.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (c.category && c.category.toLowerCase().includes(searchQuery.toLowerCase()));
       
     const matchesBrand = filterBrand ? c.brand === filterBrand : true;
     const matchesCategory = filterCategory ? c.category === filterCategory : true;

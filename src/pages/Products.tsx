@@ -41,7 +41,7 @@ export function Products() {
         setDbCategories(cData);
         
         // Filter out drafts on public site
-        const activeProducts = data.filter(p => p.status !== 'Draft');
+        const activeProducts = data.filter((p: any) => p.status !== 'Draft');
         
         if (activeProducts.length > 0) {
           setProducts(activeProducts);
@@ -71,7 +71,7 @@ export function Products() {
   const allColors = getUniqueValues('color');
   const allMaterials = getUniqueValues('material');
   const allCountries = getUniqueValues('country');
-  const allAvailability = getUniqueValues('availability');
+  const allAvailability = getUniqueValues('status');
 
 
   const toggleFilter = (list: string[], setList: (l: string[]) => void, value: string) => {
@@ -128,8 +128,44 @@ export function Products() {
       ));
     }
 
+    
+    if (selectedCollections.length > 0) {
+      result = result.filter(p => selectedCollections.includes(p.collection));
+    }
+    if (selectedSeries.length > 0) {
+      result = result.filter(p => selectedSeries.includes(p.series));
+    }
+    if (selectedColors.length > 0) {
+      result = result.filter(p => p.color && (
+        (Array.isArray(p.color) && p.color.some(f => selectedColors.includes(f))) ||
+        (typeof p.color === 'string' && selectedColors.includes(p.color))
+      ));
+    }
+    if (selectedMaterials.length > 0) {
+      result = result.filter(p => p.material && selectedMaterials.includes(p.material));
+    }
+    if (selectedAvailability.length > 0) {
+      result = result.filter(p => p.status && selectedAvailability.includes(p.status));
+    }
+    if (selectedCountries.length > 0) {
+      // Assuming countries logic via brand country (not easy to filter dynamically if brand country isn't on product, skipping for now or matching product.country)
+      result = result.filter(p => p.country && selectedCountries.includes(p.country));
+    }
+    
+    // Sorting
+    if (sortBy === 'A-Z') {
+      result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    } else if (sortBy === 'Z-A') {
+      result.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+    } else if (sortBy === 'Newest') {
+      result.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    } else if (sortBy === 'Most Popular' || sortBy === 'Featured') {
+      // Assuming featured flag
+      result.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
+    }
+
     return result;
-  }, [searchQuery, selectedCategories, selectedBrands, selectedFinishes, products]);
+  }, [searchQuery, selectedCategories, selectedBrands, selectedFinishes, selectedCollections, selectedSeries, selectedColors, selectedMaterials, selectedAvailability, selectedCountries, sortBy, products]);
 
   return (
     <div className="flex-grow flex flex-col bg-stone-50">
@@ -257,7 +293,7 @@ export function Products() {
                 return (
                   <Link 
                     key={product.id || product.sku} 
-                    to={`/products/${brand?.slug || product.brand?.toLowerCase() || 'brand'}/${category?.slug || product.category?.toLowerCase() || 'category'}/${product.slug || product.urlSlug || product.sku}`}
+                    to={`/products/${brand?.slug || product.brand?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'brand'}/${category?.slug || product.category?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'category'}/${product.slug || product.urlSlug || product.sku}`}
                     className="group bg-white rounded-2xl border border-stone-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col"
                   >
                     <div className="aspect-square relative overflow-hidden bg-stone-50 p-6 flex items-center justify-center">

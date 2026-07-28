@@ -96,7 +96,7 @@ export function AdminBrands() {
     }
   };
 
-  const filteredBrands = brands.filter(b => b.name?.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredBrands = brands.filter(b => (b.name && b.name.toLowerCase().includes(searchQuery.toLowerCase())) || false);
 
   if (showForm) {
     return (

@@ -53,22 +53,42 @@ export function ProductDetail() {
     fetchProduct();
   }, [productSlug, sku]);
 
+  
+
+  const [dbBrand, setDbBrand] = useState<any>(null);
+  const [dbCategory, setDbCategory] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadBrandAndCat() {
+      if (!product) return;
+      try {
+        const brands = await getCollection('brands');
+        const categories = await getCollection('categories');
+        setDbBrand(brands.find((b:any) => b.id === product.brandId || b.name === product.brand) || BRANDS_DATA.find(b => b.id === product.brandId || b.name === product.brand));
+        setDbCategory(categories.find((c:any) => c.id === product.categoryId || c.name === product.category) || CATEGORIES_DATA.find(c => c.id === product.categoryId || c.name === product.category));
+      } catch (e) {
+        setDbBrand(BRANDS_DATA.find(b => b.id === product.brandId || b.name === product.brand));
+        setDbCategory(CATEGORIES_DATA.find(c => c.id === product.categoryId || c.name === product.category));
+      }
+    }
+    loadBrandAndCat();
+  }, [product]);
+
   if (loading) {
     return (
       <div className="flex-grow flex items-center justify-center min-h-[50vh]">
         <div className="w-8 h-8 border-4 border-stone-200 border-t-brand-primary rounded-full animate-spin"></div>
-      
       </div>
     );
   }
 
-  if (loading) return <div className="py-24 text-center">Loading...</div>;
   if (!product) {
     return <NotFoundPage />;
   }
 
-  const brand = BRANDS_DATA.find(b => b.id === product.brandId || b.name === product.brand) || getBrandBySlug(product.brandId || brandSlug || '');
-  const category = CATEGORIES_DATA.find(c => c.id === product.categoryId || c.name === product.category) || getCategoryById(product.categoryId);
+
+  const brand: any = dbBrand || { name: product?.brand || '', slug: product?.brand?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'brand' };
+  const category = dbCategory || { name: product?.category || '', slug: product?.category?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'category' };
 
   // Safely extract images
   const images = [];

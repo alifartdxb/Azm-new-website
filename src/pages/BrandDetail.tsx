@@ -20,7 +20,7 @@ export function BrandDetail() {
       if (!brand) return;
       try {
         const data = await getCollection('products');
-        const active = data.filter((p: any) => p.status !== 'Draft' && p.brandId === brand.id);
+        const active = data.filter((p: any) => p.status !== 'Draft' && (p.brandId === brand.id || p.brand === brand.name));
         setAllProducts(active);
       } catch (e) {
         console.error(e);
@@ -43,15 +43,15 @@ export function BrandDetail() {
   const brandCategories = CATEGORIES_DATA.filter(c => brandCategoryIds.includes(c.id));
   
   // Derive available finishes for this brand
-  const brandFinishes = Array.from(new Set(allProducts.flatMap(p => p.finish)));
+  const brandFinishes = Array.from(new Set(allProducts.flatMap(p => p.finish || [])));
 
   // Filter products
   const filteredProducts = allProducts.filter(p => {
     const matchCategory = selectedCategory === 'all' || p.categoryId === selectedCategory;
-    const matchFinish = selectedFinish === 'all' || p.finish.includes(selectedFinish);
-    const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                        p.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        p.series.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchFinish = selectedFinish === 'all' || (p.finish && p.finish.includes(selectedFinish));
+    const matchSearch = (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) || 
+                        (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase())) || 
+                        (p.series && p.series.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchCategory && matchFinish && matchSearch;
   });
 
