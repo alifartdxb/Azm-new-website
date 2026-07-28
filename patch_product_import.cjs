@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+const fs = require('fs');
+
+const code = `import React, { useState, useEffect } from 'react';
 import { Upload, FileSpreadsheet, ArrowLeft, CheckCircle, AlertCircle, Download, X, Search, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
@@ -88,7 +90,7 @@ export function ProductImport() {
     data.forEach((row, index) => {
       // Find keys flexibly (case insensitive, trim spaces)
       const getVal = (possibleKeys: string[]) => {
-        const key = Object.keys(row).find(k => possibleKeys.includes(k.toLowerCase().trim().replace(/\s+/g, '')));
+        const key = Object.keys(row).find(k => possibleKeys.includes(k.toLowerCase().trim().replace(/\\s+/g, '')));
         return key ? row[key] : undefined;
       };
 
@@ -163,7 +165,7 @@ export function ProductImport() {
           status: 'Published' 
         });
         brandMap.set(bName.toLowerCase(), id);
-        newLogs.push({ type: 'info', msg: `Created new brand: ${bName}` });
+        newLogs.push({ type: 'info', msg: \`Created new brand: \${bName}\` });
       } catch (e) {
         console.error(e);
       }
@@ -181,7 +183,7 @@ export function ProductImport() {
           status: 'Published' 
         });
         catMap.set(cName.toLowerCase(), id);
-        newLogs.push({ type: 'info', msg: `Created new category: ${cName}` });
+        newLogs.push({ type: 'info', msg: \`Created new category: \${cName}\` });
       } catch (e) {
         console.error(e);
       }
@@ -236,7 +238,7 @@ export function ProductImport() {
         }
       } catch (e: any) {
         sFailed++;
-        newLogs.push({ type: 'error', msg: `Failed to import SKU ${row.sku}: ${e.message}` });
+        newLogs.push({ type: 'error', msg: \`Failed to import SKU \${row.sku}: \${e.message}\` });
       }
       setProgress(Math.round(((i + 1) / validRows.length) * 100));
     }
@@ -256,19 +258,19 @@ export function ProductImport() {
   const downloadErrorLog = () => {
     if (invalidRows.length === 0 && logs.length === 0) return;
     
-    let content = "Import Error Log\n=================\n\n";
+    let content = "Import Error Log\\n=================\\n\\n";
     if (invalidRows.length > 0) {
-      content += "INVALID ROWS (Skipped)\n---------------------\n";
+      content += "INVALID ROWS (Skipped)\\n---------------------\\n";
       invalidRows.forEach(ir => {
-        content += `Row ${ir.row}: ${ir.errors.join(', ')} | Data: ${JSON.stringify(ir.data)}\n`;
+        content += \`Row \${ir.row}: \${ir.errors.join(', ')} | Data: \${JSON.stringify(ir.data)}\\n\`;
       });
-      content += "\n";
+      content += "\\n";
     }
     
     if (logs.length > 0) {
-      content += "EXECUTION LOGS\n---------------------\n";
+      content += "EXECUTION LOGS\\n---------------------\\n";
       logs.forEach(l => {
-        content += `[${l.type.toUpperCase()}] ${l.msg}\n`;
+        content += \`[\${l.type.toUpperCase()}] \${l.msg}\\n\`;
       });
     }
 
@@ -276,7 +278,7 @@ export function ProductImport() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `import_errors_${new Date().toISOString()}.txt`;
+    a.download = \`import_errors_\${new Date().toISOString()}.txt\`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -309,9 +311,9 @@ export function ProductImport() {
             <div 
               onDragOver={e => e.preventDefault()}
               onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-2xl p-12 text-center transition-colors cursor-pointer
-                ${file ? 'border-brand-primary bg-brand-primary/5' : 'border-stone-300 bg-stone-50 hover:bg-stone-100'}
-              `}
+              className={\`border-2 border-dashed rounded-2xl p-12 text-center transition-colors cursor-pointer
+                \${file ? 'border-brand-primary bg-brand-primary/5' : 'border-stone-300 bg-stone-50 hover:bg-stone-100'}
+              \`}
             >
               <input 
                 type="file" 
@@ -321,12 +323,12 @@ export function ProductImport() {
                 onChange={handleFileChange}
               />
               <label htmlFor="file-upload" className="cursor-pointer block">
-                <FileSpreadsheet className={`mx-auto mb-4 ${file ? 'text-brand-primary' : 'text-stone-400'}`} size={48} />
+                <FileSpreadsheet className={\`mx-auto mb-4 \${file ? 'text-brand-primary' : 'text-stone-400'}\`} size={48} />
                 <h3 className="font-bold text-lg text-stone-800 mb-2">
                   {file ? file.name : 'Select or drag file here'}
                 </h3>
                 <p className="text-stone-500 text-sm mb-6">
-                  {file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : 'Supported formats: .xlsx, .csv'}
+                  {file ? \`\${(file.size / 1024 / 1024).toFixed(2)} MB\` : 'Supported formats: .xlsx, .csv'}
                 </p>
                 <span className="px-6 py-2 bg-white border border-stone-200 rounded-lg text-sm font-bold text-stone-600 hover:bg-stone-50 shadow-sm inline-block">
                   {file ? 'Change File' : 'Browse Files'}
@@ -418,7 +420,7 @@ export function ProductImport() {
             <div className="w-full bg-stone-100 h-3 rounded-full overflow-hidden mb-4">
               <div 
                 className="bg-brand-primary h-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
+                style={{ width: \`\${progress}%\` }}
               ></div>
             </div>
             <p className="text-stone-500 font-medium">{progress}% Complete</p>
@@ -497,3 +499,6 @@ export function ProductImport() {
     </div>
   );
 }
+`;
+
+fs.writeFileSync('src/pages/admin/products/ProductImport.tsx', code);

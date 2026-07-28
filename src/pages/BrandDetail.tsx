@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { SEO } from '../components/SEO';
 import { OptimizedImage } from '../components/OptimizedImage';
-import { getBrandBySlug, getProductsByBrand, CATEGORIES_DATA } from '../data';
+import { getBrandBySlug, CATEGORIES_DATA } from '../data';
+import { getCollection } from '../services/db';
 import { ArrowRight, MessageSquare, FileText, Filter, X, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import { Product } from '../types';
 
@@ -12,7 +13,21 @@ import { NotFoundPage } from './NotFoundPage';
 export function BrandDetail() {
   const { brandSlug } = useParams<{ brandSlug: string }>();
   const brand = getBrandBySlug(brandSlug || '');
-  const allProducts = useMemo(() => brand ? getProductsByBrand(brand.id) : [], [brand]);
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  
+  useEffect(() => {
+    async function fetchProducts() {
+      if (!brand) return;
+      try {
+        const data = await getCollection('products');
+        const active = data.filter((p: any) => p.status !== 'Draft' && p.brandId === brand.id);
+        setAllProducts(active);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    fetchProducts();
+  }, [brand]);
   
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedFinish, setSelectedFinish] = useState<string>('all');
@@ -273,7 +288,7 @@ export function BrandDetail() {
                       <div key={product.id} className="bg-white rounded-2xl border border-stone-200 overflow-hidden group flex flex-col hover:shadow-xl transition-all duration-300">
                         <Link to={productUrl} className="aspect-square relative overflow-hidden bg-stone-100 block">
                           <OptimizedImage 
-                            src={product.images[0]} 
+                            src={product.mainImage || product.thumbnail || (product.images && product.images[0]) || 'https://placehold.co/400'} 
                             alt={product.name}
                             className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-all duration-500"
                           />

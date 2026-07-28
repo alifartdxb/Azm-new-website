@@ -4,9 +4,24 @@ import { motion } from 'motion/react';
 import { SEO } from '../components/SEO';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { BRANDS_DATA } from '../data';
+import { getCollection } from '../services/db';
 import { ArrowRight } from 'lucide-react';
 
 export function Brands() {
+  const [brands, setBrands] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    async function loadBrands() {
+      try {
+        const data = await getCollection('brands');
+        const active = data.filter((b: any) => b.status !== 'Draft');
+        setBrands(active.length > 0 ? active : BRANDS_DATA);
+      } catch (e) {
+        setBrands(BRANDS_DATA);
+      }
+    }
+    loadBrands();
+  }, []);
   return (
     <div className="flex-grow flex flex-col bg-stone-50 overflow-hidden">
       <SEO 
@@ -27,7 +42,7 @@ export function Brands() {
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {BRANDS_DATA.map((brand, idx) => (
+            {brands.map((brand, idx) => (
               <motion.div 
                 key={brand.id}
                 initial={{ opacity: 0, y: 20 }}

@@ -24,13 +24,21 @@ export function Products() {
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>("Newest");
   const [products, setProducts] = useState<any[]>([]);
+  const [dbBrands, setDbBrands] = useState<any[]>([]);
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadProducts() {
       try {
         setLoading(true);
-        const data = await getCollection('products') as any[];
+        const [data, bData, cData] = await Promise.all([
+          getCollection('products'),
+          getCollection('brands'),
+          getCollection('categories')
+        ]);
+        setDbBrands(bData);
+        setDbCategories(cData);
         
         // Filter out drafts on public site
         const activeProducts = data.filter(p => p.status !== 'Draft');
@@ -180,8 +188,8 @@ export function Products() {
                 </div>
 
                 
-                <FilterSection title="Brands" options={BRANDS_DATA.map(b => ({id: b.id, name: b.name}))} selected={selectedBrands} toggle={(val) => toggleFilter(selectedBrands, setSelectedBrands, val)} />
-                <FilterSection title="Categories" options={CATEGORIES_DATA.map(c => ({id: c.id, name: c.name}))} selected={selectedCategories} toggle={(val) => toggleFilter(selectedCategories, setSelectedCategories, val)} />
+                <FilterSection title="Brands" options={dbBrands.length > 0 ? dbBrands.map(b => ({id: b.id, name: b.name})) : BRANDS_DATA.map(b => ({id: b.id, name: b.name}))} selected={selectedBrands} toggle={(val) => toggleFilter(selectedBrands, setSelectedBrands, val)} />
+                <FilterSection title="Categories" options={dbCategories.length > 0 ? dbCategories.map(c => ({id: c.id, name: c.name})) : CATEGORIES_DATA.map(c => ({id: c.id, name: c.name}))} selected={selectedCategories} toggle={(val) => toggleFilter(selectedCategories, setSelectedCategories, val)} />
                 <FilterSection title="Collections" options={allCollections.map(f => ({id: f, name: f}))} selected={selectedCollections} toggle={(val) => toggleFilter(selectedCollections, setSelectedCollections, val)} />
                 <FilterSection title="Series" options={allSeries.map(f => ({id: f, name: f}))} selected={selectedSeries} toggle={(val) => toggleFilter(selectedSeries, setSelectedSeries, val)} />
                 <FilterSection title="Finishes" options={allFinishes.map(f => ({id: f, name: f}))} selected={selectedFinishes} toggle={(val) => toggleFilter(selectedFinishes, setSelectedFinishes, val)} />
@@ -243,8 +251,8 @@ export function Products() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredProducts.map(product => {
-                const brand = BRANDS_DATA.find(b => b.id === product.brandId || b.name === product.brand);
-                const category = CATEGORIES_DATA.find(c => c.id === product.categoryId || c.name === product.category);
+                const brand = dbBrands.find((b:any) => b.id === product.brandId || b.name === product.brand) || BRANDS_DATA.find(b => b.id === product.brandId || b.name === product.brand);
+                const category = dbCategories.find((c:any) => c.id === product.categoryId || c.name === product.category) || CATEGORIES_DATA.find(c => c.id === product.categoryId || c.name === product.category);
                 
                 return (
                   <Link 

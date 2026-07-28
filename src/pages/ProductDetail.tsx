@@ -16,6 +16,7 @@ export function ProductDetail() {
   
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const imagesList = product?.images && product.images.length > 0 ? product.images : (product?.mainImage ? [product.mainImage] : ['https://placehold.co/400']);
   const [activeImage, setActiveImage] = useState(0);
   const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
 
@@ -61,6 +62,7 @@ export function ProductDetail() {
     );
   }
 
+  if (loading) return <div className="py-24 text-center">Loading...</div>;
   if (!product) {
     return <NotFoundPage />;
   }

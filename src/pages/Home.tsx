@@ -7,6 +7,7 @@ import { SEO } from "../components/SEO";
 import { OptimizedImage } from "../components/OptimizedImage";
 import { PartnerMarquee } from "../components/PartnerMarquee";
 import { TestimonialCarousel } from "../components/TestimonialCarousel";
+import { getCollection } from "../services/db";
 
 const HERO_SLIDES = [
   {
@@ -37,6 +38,27 @@ const HERO_SLIDES = [
 
 export function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function loadFeatured() {
+      try {
+        const data = await getCollection('products');
+        if (data && data.length > 0) {
+          // Sort by newly created, active products
+          const active = data.filter((p: any) => p.status !== 'Draft');
+          const sorted = active.sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+          setFeaturedProducts(sorted.slice(0, 4));
+        } else {
+          setFeaturedProducts(PRODUCTS_DATA.slice(0, 4));
+        }
+      } catch (e) {
+        console.error(e);
+        setFeaturedProducts(PRODUCTS_DATA.slice(0, 4));
+      }
+    }
+    loadFeatured();
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -225,13 +247,13 @@ export function Home() {
            </div>
            
            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {PRODUCTS_DATA.slice(0, 4).map((product, idx) => (
+            {featuredProducts.map((product, idx) => (
                 <div key={`${product.sku}-${idx}`} className="group relative bg-stone-50 rounded-2xl border border-stone-100 p-6 hover:shadow-2xl hover:shadow-brand-secondary/5 transition-all duration-300">
                   <div className="absolute top-4 left-4 z-10">
                     <span className="bg-brand-primary text-white text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full">{product.series}</span>
                   </div>
                   <div className="aspect-square bg-white rounded-xl mb-6 relative overflow-hidden flex items-center justify-center p-0">
-                     <OptimizedImage src={product.images[0]} alt={product.name} className="mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
+                     <OptimizedImage src={product.mainImage || product.thumbnail || (product.images && product.images[0]) || 'https://placehold.co/400'} alt={product.name} className="mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
                      <div className="absolute inset-0 bg-brand-secondary/0 group-hover:bg-brand-secondary/5 transition-colors duration-300"></div>
                   </div>
                   <div>
