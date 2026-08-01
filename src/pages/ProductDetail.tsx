@@ -29,7 +29,7 @@ export function ProductDetail() {
         // Find product by slug or sku
         let foundProduct = null;
         if (productSlug) {
-          foundProduct = products.find(p => p.urlSlug === productSlug || p.slug === productSlug);
+          foundProduct = products.find(p => p.urlSlug === productSlug || p.slug === productSlug || p.sku === productSlug);
         }
         if (!foundProduct && sku) {
           foundProduct = products.find(p => p.sku === sku);

@@ -28,6 +28,7 @@ const ProductForm = lazy(() => import("./pages/admin/products/ProductForm").then
 const ProductImport = lazy(() => import("./pages/admin/products/ProductImport").then(module => ({ default: module.ProductImport })));
 const AdminBrands = lazy(() => import("./pages/admin/AdminBrands").then(module => ({ default: module.AdminBrands })));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories").then(module => ({ default: module.AdminCategories })));
+const AdminSystem = lazy(() => import("./pages/admin/AdminSystem").then(module => ({ default: module.AdminSystem })));
 const AdminTestimonials = lazy(() => import("./pages/admin/AdminTestimonials").then(module => ({ default: module.AdminTestimonials })));
 const AdminBlogs = lazy(() => import("./pages/admin/AdminBlogs").then(module => ({ default: module.AdminBlogs })));
 const AdminCatalogues = lazy(() => import("./pages/admin/catalogues/AdminCatalogues").then(module => ({ default: module.AdminCatalogues })));
@@ -69,6 +70,7 @@ export default function App() {
                 <Route path="media" element={<AdminGeneric />} />
                 <Route path="seo" element={<AdminGeneric />} />
                 <Route path="leads" element={<AdminLeads />} />
+            <Route path="system" element={<AdminSystem />} />
                 <Route path="users" element={<AdminUsers />} />
               </Route>
             </Route>

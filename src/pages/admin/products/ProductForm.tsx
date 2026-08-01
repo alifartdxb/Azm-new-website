@@ -102,11 +102,21 @@ export function ProductForm() {
   const handleSave = async (redirect = true) => {
     try {
       setSaving(true);
+            let dataToSave = { ...formData };
+      
+      // Auto-generate slug if missing
+      if (!dataToSave.urlSlug && dataToSave.name) {
+        dataToSave.urlSlug = dataToSave.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      }
+      
+      // Ensure it has slug as well
+      dataToSave.slug = dataToSave.urlSlug || dataToSave.slug || (dataToSave.name ? dataToSave.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '');
+
       if (isEdit && id) {
-        await updateDocument('products', id, formData);
+        await updateDocument('products', id, dataToSave);
       } else {
         await createDocument('products', {
-          ...formData,
+          ...dataToSave,
           createdAt: new Date().toISOString()
         });
       }

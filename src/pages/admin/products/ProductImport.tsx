@@ -201,6 +201,7 @@ export function ProductImport() {
           sku: row.sku,
           name: row.name,
           urlSlug: row.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + row.sku.toLowerCase(),
+          slug: row.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + row.sku.toLowerCase(),
           brand: row.brand,
           brandId: brandId,
           category: row.category,
